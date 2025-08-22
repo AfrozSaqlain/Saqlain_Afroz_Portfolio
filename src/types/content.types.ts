@@ -27,6 +27,10 @@ export type Person = {
   location: IANATimeZone;
   /** Languages spoken */
   languages?: string[];
+  /** Peron's CV */
+  cv_path?: string;
+  /** Peron's CV */
+  cv_pic_path?: string;
 };
 
 /**

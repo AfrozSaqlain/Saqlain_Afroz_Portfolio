@@ -10,6 +10,8 @@ const person: Person = {
   email: "sa20ms230@iiserkol.ac.in",
   location: "Asia/Kolkata", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English", "Hindi"], // optional: Leave the array empty if you don't want to display languages
+  cv_path: "/docs/Saqlain_Afroz_CV.pdf",
+  cv_pic_path: "/images/CV_Pic.jpg"
 };
 
 const newsletter: Newsletter = {
@@ -59,10 +61,10 @@ const home: Home = {
     display: true,
     title: (
       <>
-        Recent project: <strong className="ml-4">Once UI</strong>
+        Recent project: <strong className="ml-4">MLGW</strong>
       </>
     ),
-    href: "/work/building-once-ui-a-customizable-design-system",
+    href: "/work/deep-learning-in-gravitational-wave-astrophysics",
   },
   subline: (
     <>

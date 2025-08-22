@@ -10,7 +10,8 @@ import {
   Tag,
   Text,
   Meta,
-  Schema
+  Schema,
+  RevealFx
 } from "@once-ui-system/core";
 import { baseURL, about, person, social } from "@/resources";
 import TableOfContents from "@/components/about/TableOfContents";
@@ -103,6 +104,29 @@ export default function About() {
                 ))}
               </Flex>
             )}
+            <RevealFx paddingTop="12" delay={0.4} horizontal="start" paddingLeft="104">
+            <Button
+              id="about"
+              data-border="rounded"
+              href={person.cv_path}
+              variant="secondary"
+              size="m"
+              weight="default"
+              arrowIcon
+            >
+              <Flex gap="8" vertical="center" paddingRight="4">
+                {about.avatar.display && (
+                  <Avatar
+                    marginRight="8"
+                    style={{ marginLeft: "-0.75rem" }}
+                    src={person.cv_pic_path}
+                    size="m"
+                  />
+                )}
+                My CV
+              </Flex>
+            </Button>
+          </RevealFx>
           </Column>
         )}
         <Column className={styles.blockAlign} flex={9} maxWidth={40}>
