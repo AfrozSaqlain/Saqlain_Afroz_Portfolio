@@ -104,7 +104,7 @@ export default function About() {
                 ))}
               </Flex>
             )}
-            <RevealFx paddingTop="12" delay={0.4} horizontal="start" paddingLeft="104">
+            <RevealFx paddingTop="8" delay={0.0} horizontal="start" paddingLeft="104" marginRight="12">
             <Button
               id="about"
               data-border="rounded"
@@ -114,10 +114,10 @@ export default function About() {
               weight="default"
               arrowIcon
             >
-              <Flex gap="8" vertical="center" paddingRight="4">
+              <Flex gap="8" vertical="center" paddingRight="2">
                 {about.avatar.display && (
                   <Avatar
-                    marginRight="8"
+                    marginRight="4"
                     style={{ marginLeft: "-0.75rem" }}
                     src={person.cv_pic_path}
                     size="m"

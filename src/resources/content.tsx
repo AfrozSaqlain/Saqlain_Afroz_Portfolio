@@ -39,9 +39,9 @@ const social: Social = [
     link: "https://www.linkedin.com/in/saqlain-afroz-7a47961b8/",
   },
   {
-    name: "Threads",
-    icon: "threads",
-    link: "https://www.threads.com/@once_ui",
+    name: "Instagram",
+    icon: "instagram",
+    link: "https://www.instagram.com/afroz_3680/",
   },
   {
     name: "Email",
