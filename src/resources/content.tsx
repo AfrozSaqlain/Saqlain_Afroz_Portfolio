@@ -133,7 +133,7 @@ const about: About = {
       {
         company: "Quasi-Normal Mode Computation of Black Holes via Physics-Informed Neural Networks",
         timeframe: "2025 - Present",
-        role: "Guide: Prof. Ajit Kembhavi, Dr. Ninan Sajeeth Philip, Dr. Dawood Kothawala",
+        role: "Guide: Prof. Ajit Kembhavi, Prof. Dawood Kothawala, Dr. Ninan Sajeeth Philip",
         achievements: [
           <>
             Developed a Physics-Informed Neural Network (PINN) framework to compute quasi-normal modes of black holes in alternative theories of gravity.
