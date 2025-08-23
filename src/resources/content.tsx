@@ -1,4 +1,4 @@
-import { About, Blog, Gallery, Home, Newsletter, Person, Social, Work } from "@/types";
+import { About, Blog, CV, Gallery, Home, Newsletter, Person, Social, Work } from "@/types";
 import { Logo } from "@once-ui-system/core";
 
 const person: Person = {
@@ -10,7 +10,7 @@ const person: Person = {
   email: "sa20ms230@iiserkol.ac.in",
   location: "Asia/Kolkata", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English", "Hindi"], // optional: Leave the array empty if you don't want to display languages
-  cv_path: "/docs/Saqlain_Afroz_CV.pdf",
+  cv_path: "/cv",
   cv_pic_path: "/images/CV_Pic.jpg"
 };
 
@@ -232,6 +232,15 @@ const blog: Blog = {
   // All posts will be listed on the /blog route
 };
 
+const cv: CV = {
+  path: "/cv",
+  label: "CV",
+  title: "Saqlain Afroz's CV",
+  description: `Read about ${person.name}'s education, work experience, and skills`,
+  // Create new blog posts by adding a new .mdx file to app/blog/posts
+  // All posts will be listed on the /blog route
+};
+
 const work: Work = {
   path: "/work",
   label: "Work",
@@ -292,4 +301,4 @@ const gallery: Gallery = {
   ],
 };
 
-export { person, social, newsletter, home, about, blog, work, gallery };
+export { person, social, newsletter, home, about, blog, cv, work, gallery };

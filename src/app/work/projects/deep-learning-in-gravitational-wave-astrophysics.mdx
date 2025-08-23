@@ -2,9 +2,6 @@
 title: "Deep Learning in Gravitational Wave Astrophysics."
 publishedAt: "2025-08-22"
 summary: "Explored Deep Learning based classification and parameter estimation of various kinds of Gravitational Wave sources."
-images:
-  - "/images/projects/project-01/cover-02.jpg"
-  - "/images/projects/project-01/image-03.jpg"
 team:
   - name: "Saqlain Afroz"
     role: "Student"
@@ -21,36 +18,106 @@ team:
 link: "https://github.com/AfrozSaqlain/Eccentricity_vs_Lensed"
 ---
 
-## Overview
+# 🔭 GWTorch Project Overview
 
-In this project, I focused on automating the often tedious design handover process. The goal was to create a pipeline that converts Figma designs directly into clean, production-ready code. By integrating design tokens, component libraries, and automated workflows, this solution significantly reduced the time spent on translating design assets into code, while maintaining design consistency across the product.
+A machine learning toolkit to classify gravitational wave (GW) signals — eccentric, lensed, and non-eccentric — using CNN and Transformer models. This project involves generation, preprocessing, training, and evaluation of GW signals using Q-transform spectrograms.
 
-$$
-  \int x dx = \frac{x^2}{2} + C
-$$
+To install the package just: `bash install.sh`
 
-## Key Features
+# A guide to File Structure
 
-- **Figma Plugin Integration**: Developed a custom Figma plugin that extracts design tokens such as colors, typography, and spacing values, and exports them in a format compatible with our codebase.
-- **Code Generation**: Integrated an automated process that translates Figma components into React code using a combination of design tokens and pre-built component templates. This allowed developers to focus more on logic and less on repetitive UI coding.
-- **Continuous Sync**: Established a CI/CD pipeline that continuously synchronizes design changes from Figma to the codebase, ensuring design updates are reflected instantly without manual intervention.
-- **Scalable Design System**: Leveraged a design system that remains the single source of truth for both designers and developers, making it easy to maintain consistency even as the product evolves.
+<pre>
+.
+├── environment.yml
+├── install.sh
+├── pyproject.toml
+├── gwtorch
+│   ├── inference
+│   │   ├── __pycache__
+│   │   ├── cnn_eval.py
+│   │   └── transformer_eval.py
+│   ├── modules
+│   │   ├── __pycache__
+│   │   ├── constants.py
+│   │   ├── general_utils.py
+│   │   ├── gw_utils.py
+│   │   ├── ml_utils.py
+│   │   └── neural_net.py
+│   ├── training
+│   │   ├── __pycache__
+│   │   ├── binary_cnn_classifier.py
+│   │   ├── binary_transformer_classifier.py
+│   │   ├── cnn.py
+│   │   ├── Meta_model.py
+│   │   └── transformer.py
+│   └── waveform_generation
+│       ├── gen_ln_B.py
+│       ├── gen.py
+│       ├── exp_gen.py
+│       ├── Prior_Files
+│       └── __pycache__
+└── README.md
 
-## Technologies Used
+</pre>
 
-- **Figma API**: For extracting design tokens and component data directly from the Figma designs.
-- **React and Next.js**: For building the front-end codebase with clean, reusable components.
-- **Styled-Components**: For managing styles dynamically using design tokens.
-- **GitHub Actions**: For automating the pipeline and syncing design changes to the repository.
+## 📌 Key Files Description
 
-## Challenges and Learnings
+- `exp_gen.py`: Generates Q-transform spectrograms of synthetic GW signals.
+- `cnn.py`, `transformer.py`: Contain CNN and Transformer model definitions with training/testing routines.
+- `cnn_eval.py`, `transformer_eval.py`: Specifically used to evaluate trained CNN and Transformer models on test data.
 
-One of the biggest challenges was ensuring that the generated code was clean and maintainable. This involved setting up intelligent mapping between Figma components and React code structures, as well as managing edge cases like responsive design and conditional rendering. Additionally, the continuous synchronization required a robust error-handling system to prevent conflicts during development.
 
-## Outcome
+# 🖥️ Command Line Interface (CLI)
 
-The automated Figma to code pipeline has streamlined the handoff process, cutting down design-to-development time by 40%. Designers now have more confidence that their designs will be accurately translated into code, and developers can focus on more complex logic and feature development. This project has proven the value of automation in bridging the gap between design and development.
+- **`exp_gen_gwtorch --num-samples [int] --path-name [str] --batch-size [int]`** : Used to generate qtransform of the waveform samples.
+- **`cnn_train_gwtorch --batch_size [default: 128] --epochs [default: 20] --lr [default: 3e-4] --gamma [default: 0.7] --model_path [default: cnn_model0.pth]  --k-folds [default: 5] --use-kfold [stores Truth value]`**: Train the CNN model on the data generated using previous code. The directory `models` is created if it doesn't exist.
+- **`transformer_train_gwtorch --model [default: ViT] --batch_size [default: 512] --epochs [default 20] --lr [default: 3e-5] --gamma [default: 0.7] --seed [default: 42] --k-folds [default: 5] --use-kfold [stores Truth value]`**:  Train the Transformer model on the data generated.
 
----
+# 🌊 How GW waveforms are generated
 
-This project demonstrates your ability to leverage automation and streamline workflows, which is highly relevant for design engineering portfolios focused on efficiency and innovation.
+We use `TEOBResumS` to generate signals assuming `f_lower` = 5. Two sets of data are generated: 
+- Eccentric: By giving the `eccentricity` parameter, sampled from prior assuming `Uniform` distribution in [0.1, 0.6].
+- Non-Eccentric: By giving the `eccentricity` parameter value to be equal to 0.
+
+The Non-Eccentric waveform is then used to generate unlensed data as well as lensed data. Lensing is done using `GWMAT` package.
+
+The waveforms are then projected onto given set of detectors by using `ra`, `dec`, and `polarization` values sampled from the prior
+
+Each wave is then tapered. Then we generated noise from corresponding PSD.
+
+Next we pad each GW signal and add it to the noise such that the peak of the signal lies within 2.2 seconds to 2 seconds window before the noise ends. This is done to make the training process robust to moderate time
+translations in the signal.
+
+The signal is then cropped so that the data is of 8s duration.
+
+Then finally we generate the `q_transforms` of each signal and save them as `.npy` file with naming convention such that if the signal is `lensed` then the file is located at `lensed / {num}.npy`, where `num` just represnts file number.
+
+## 📋 Prior Distributions Table
+
+<Table
+  data={{
+    headers: [
+      { content: "Parameter", key: "parameter", sortable: true },
+      { content: "Distribution Type", key: "distribution_type", sortable: true },
+      { content: "Range / Description", key: "range_description" }
+    ],
+    rows: [
+      ["mass1", "Constraint", "[10, 100]"],
+      ["mass2", "Constraint", "[10, 100]"],
+      ["mass_ratio", "UniformInComponentsMassRatio", "[0.1, 1]"],
+      ["chirp_mass", "UniformInComponentsChirpMass", "[10, 100]"],
+      ["spin1z", "Uniform", "[-0.9, 0.9]"],
+      ["spin2z", "Uniform", "[-0.9, 0.9]"],
+      ["eccentricity", "Uniform", "[0.1, 0.6]"],
+      ["coa_phase", "Uniform", "[0.0, 2π]"],
+      ["SNR", "PowerLaw (α = -4)", "[10, 500]"],
+      ["dec", "Cosine", "[−π/2, π/2]"],
+      ["ra", "Uniform (periodic)", "[0, 2π]"],
+      ["polarization", "Uniform (periodic)", "[0, π]"],
+      ["Log_Mlz", "Uniform", "[1, 5]"],
+      ["yl", "PowerLaw (α = 1)", "[0.01, 1.0]"]
+    ]
+  }}
+/>
+
+**Note:** The `exp_gen.py` script also generates a Lookup table for parameter values corresponding to each sample and each category. Also sample `data` generated is given in `data_for_reference` folder alongwith its `Parameter Reference` in csv format.
