@@ -104,7 +104,7 @@ export default function About() {
                 ))}
               </Flex>
             )}
-            <RevealFx paddingTop="8" delay={0.0} horizontal="start" paddingLeft="104" marginRight="12">
+            <Flex paddingTop="8" horizontal="start" paddingLeft="32" marginRight="12">
             <Button
               id="about"
               data-border="rounded"
@@ -126,7 +126,7 @@ export default function About() {
                 My CV
               </Flex>
             </Button>
-          </RevealFx>
+          </Flex>
           </Column>
         )}
         <Column className={styles.blockAlign} flex={9} maxWidth={40}>

@@ -217,6 +217,10 @@ import {
   SmartLink,
 } from "@once-ui-system/core";
 
+import { Mail, Phone, Globe } from "lucide-react";
+import { SiLinkedin, SiGithub } from "react-icons/si";
+
+
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css"; // 👈 required for math rendering
@@ -371,6 +375,11 @@ const components = {
   Icon,
   Media,
   SmartLink,
+  Mail,
+  Phone,
+  Globe,
+  SiLinkedin, 
+  SiGithub
 };
 
 type CustomMDXProps = MDXRemoteProps & {
