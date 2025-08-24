@@ -8,6 +8,7 @@ import { Background, Column, Flex, Meta, opacity, SpacingToken } from "@once-ui-
 import { Footer, Header, RouteGuard, Providers } from '@/components';
 import { baseURL, effects, fonts, style, dataStyle, home } from '@/resources';
 import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import "katex/dist/katex.min.css";
 
 export async function generateMetadata() {
@@ -163,6 +164,7 @@ export default async function RootLayout({
                     {children}
                   </RouteGuard>
                 <Analytics />
+                <SpeedInsights />
               </Flex>
             </Flex>
             <Footer/>
