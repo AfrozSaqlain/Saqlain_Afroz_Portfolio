@@ -1,0 +1,207 @@
+---
+title: "Customize Your GitHub Profile Like a Pro"
+summary: "A step-by-step guide to creating a dynamic and visually appealing GitHub profile README using GitHub Actions, stats cards, and animated contribution graphs."
+publishedAt: "2025-08-24"
+image: "/images/og/github.png"
+tag: "GitHub"
+---
+
+Your GitHub profile is often the first impression you make on potential employers, collaborators, and fellow developers. While a list of pinned repositories is good, a custom profile README can turn your page into a dynamic portfolio.
+
+In this tutorial, we'll go through the process of creating a special repository to display a README on your profile, adding dynamic stats cards, and setting up a GitHub Action to generate a beautiful, animated "snake" from your contribution graph.
+
+
+
+## Create Your Special Profile Repository
+
+The magic all starts with a "secret" feature on GitHub: a repository that has the **exact same name as your username**.
+
+1.  **Create a New Repository**: Click the **+** icon in the top-right corner of GitHub and select **New repository**.
+2.  **Name It After Yourself**: In the "Repository name" field, type your GitHub username. For example, if your username is `jane-doe`, name the repository `jane-doe`. You'll see a message from GitHub letting you know you've found a special repository.
+3.  **Make it Public**: This is crucial. The repository must be public for the README to be visible.
+4.  **Initialize with a README**: Check the box that says **Add a README file**.
+
+Click **Create repository**, and that's it! The content of this new `README.md` file will now be displayed on your main profile page.
+
+
+## Add Dynamic GitHub Stats Cards
+
+Static text is great, but let's add some life to your profile with cards that automatically update to reflect your activity. We'll use the popular [github-readme-stats](https://github.com/anuraghazra/github-readme-stats) tool.
+
+
+### Adding the Stats and Language Cards
+
+You can add two main types of cards: one for your overall stats (stars, commits, etc.) and another for your most-used languages.
+
+To make them appear side-by-side, we can use a simple HTML `<table>`. Add the following code to your `README.md` file, making sure to replace `YOUR_USERNAME` with your actual GitHub username.
+
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`<table align="center">
+  <tr>
+    <td>
+      <a href="[https://github.com/anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats)">
+        <img src="[https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=tokyonight&count_private=true](https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=tokyonight&count_private=true)" alt="My GitHub Stats"/>
+      </a>
+    </td>
+    <td>
+      <a href="[https://github.com/anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats)">
+        <img src="[https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_USERNAME&layout=compact&theme=tokyonight](https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_USERNAME&layout=compact&theme=tokyonight)" alt="Top Languages"/>
+      </a>
+    </td>
+  </tr>
+</table>`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
+
+
+### Customizing the Cards
+
+This tool is highly customizable. You can change themes, hide specific stats, and more by adding parameters to the src URL.
+1. Change the Theme: Replace `theme=tokyonight` with `theme=dracula`, `theme=gruvbox`, or check the full list of themes. 
+2. Hide a Stat: Add `&hide=prs, issues` to hide your PR and issue counts.
+3. Set a Custom Title: Add `&custom_title=My%20Coding%20Journey` to change the title.
+
+## Generate an Animated Contribution Snake 🐍
+
+This is where things get really cool. We'll set up a GitHub Action that automatically generates an animated SVG of your contribution graph. 
+
+### Create the Workflow File
+A GitHub Action is a script that runs automatically based on certain triggers. In your profile repository, create a folder named `.github`. Inside `.github`, create another folder named workflows. Inside `.github/workflows`, create a new file named snake.yml. The final path should be `.github/workflows/snake.yml`. Add the Workflow code. Copy and paste the following code into `snake.yml`. This script will run every 12 hours, generate the animation, and push it to a special branch called output.
+
+Important: Remember to replace `YOUR_USERNAME` with your actual username.
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+# Name of the workflow
+name: Generate Snake Animation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
+    
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate Snake Animation
+        uses: Platane/snk@v3
+        with:
+          github_user_name: YOUR_USERNAME
+          outputs: |
+            dist/github-contribution-grid-snake.svg
+            dist/github-snake-dark.svg?palette=github-dark
+
+      - name: Push to output branch
+        uses: crazy-max/ghaction-github-pages@v3.1.0
+        with:
+          target_branch: output
+          build_dir: dist
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+`, 
+    language: "yaml",
+    label: "<github-username>/README.md"
+  }
+]} />
+
+The `permissions: contents: write` line is critical — it gives the action permission to write the generated file back to your repository. Commit the `snake.yml` file.Go to the Actions tab of your repository. On the left, click "Generate Snake Animation" and then click the Run workflow button. After a minute or two, the action will complete. Now, you can add the snake to your `README.md` file with this line of code: 
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+### 🐍 My Contribution Graph
+
+![github snake animation](https://github.com/YOUR_USERNAME/YOUR_USERNAME/blob/output/github-snake-dark.svg)
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
+
+<Media
+  src="/images/gallery/github-snake-dark.svg"
+  alt="Example video"
+  aspectRatio="2.35/1"
+  radius="l"
+/>
+
+Putting It All TogetherHere is a complete README.md example combining all the elements.
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+## Hi there 👋
+
+I'm Saqlain Afroz, an aspiring astrophysicist, skilled in gravitational wave astrophysics, machine learning, and scientific computing.
+
+---
+
+### 🛠️ My Tech Stack
+
+* **Languages**: Python, C/C++, Julia
+* **Frameworks**: PyTorch, Tensorflow, Bilby, PyCBC
+* **Databases**: MongoDB, PostgreSQL
+* **Tools**: Git, Docker, VS Code
+
+---
+
+### 📊 My GitHub Stats
+
+<table align="center">
+  <tr>
+    <td>
+      <a href="https://github.com/anuraghazra/github-readme-stats">
+        <img src="https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=tokyonight&count_private=true&hide_border=true&custom_title=Afroz's%20GitHub%20Journey&hide=prs" alt="Afroz's GitHub Journey"/>
+      </a>
+    </td>
+    <td>
+      <a href="https://github.com/anuraghazra/github-readme-stats">
+        <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_USERNAME&layout=compact&theme=tokyonight&hide_border=true&langs_count=10&hide=css,Jupyter%20Notebook" alt="Top Languages"/>
+      </a>
+    </td>
+  </tr>
+</table>
+
+---
+
+### 🐍 My Contribution Graph
+
+![github snake animation](https://github.com/YOUR_USERNAME/YOUR_USERNAME/blob/output/github-snake-dark.svg)
+<Media
+  src="/images/gallery/github-snake-dark.svg"
+  alt="Example video"
+  aspectRatio="2.35/1"
+  radius="l"
+/>
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
