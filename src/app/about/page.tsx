@@ -110,8 +110,6 @@ export default function About() {
               data-border="rounded"
               href={person.cv_path}
               variant="secondary"
-              size="m"
-              weight="default"
               arrowIcon
             >
               <Flex gap="8" vertical="center" paddingRight="2">
@@ -184,13 +182,10 @@ export default function About() {
                                 href={item.link}
                                 prefixIcon={item.icon}
                                 label={item.name}
-                                size="s"
-                                weight="default"
                                 variant="secondary"
                             />
                             <IconButton
                                 className="s-flex-show"
-                                size="l"
                                 key={`${item.name}-icon`}
                                 href={item.link}
                                 icon={item.icon}
