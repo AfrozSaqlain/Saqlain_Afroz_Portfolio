@@ -48,7 +48,6 @@ export default function Home() {
               data-border="rounded"
               href={about.path}
               variant="secondary"
-              weight="default"
               arrowIcon
             >
               <Flex gap="8" vertical="center" paddingRight="4">
