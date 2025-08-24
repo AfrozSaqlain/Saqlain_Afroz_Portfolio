@@ -23,13 +23,66 @@ The magic all starts with a "secret" feature on GitHub: a repository that has th
 
 Click **Create repository**, and that's it! The content of this new `README.md` file will now be displayed on your main profile page.
 
+## Add Typing animation Text
+
+Go to the following [link](https://readme-typing-svg.herokuapp.com/demo/) and fill in the boxes as per your requirement. You will get something like this:
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&width=435&separator=%3C&lines=I'm+an+aspiring+astrophysicist;+skilled+in+GW+astrophysics;+machine+learning;+and+scientific+computing.)](https://git.io/typing-svg)
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
+
+To apply some `CSS` we can instead use the below  code and copy paste it into our `README.md` file.
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+<p align="center">
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&center=true&vCenter=true&width=435&lines=I'm+an+aspiring+astrophysicist%2C;skilled+in+GW+astrophysics%2C+;machine+learning%2C+;and+scientific+computing." alt="Typing SVG" />
+  </a>
+</p>
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
 
 ## Add Dynamic GitHub Stats Cards
 
 Static text is great, but let's add some life to your profile with cards that automatically update to reflect your activity. We'll use the popular [github-readme-stats](https://github.com/anuraghazra/github-readme-stats) tool.
 
+## GitHub streak
+Copy-paste the markdown below into your GitHub profile `README.md` and replace `YOUR_USERNAME` with your GitHub username.
 
-### Adding the Stats and Language Cards
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+[![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=YOUR_USERNAME)](https://git.io/streak-stats)
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
+
+### Adding the Stats, Language and Streak Cards
 
 You can add two main types of cards: one for your overall stats (stars, commits, etc.) and another for your most-used languages.
 
@@ -42,20 +95,31 @@ To make them appear side-by-side, we can use a simple HTML `<table>`. Add the fo
     codes={[
   {
     code:
-`<table align="center">
+`
+<h2 align="center">My GitHub Stats 🚀</h2>
+
+<table align="center" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: none;">
   <tr>
     <td>
-      <a href="[https://github.com/anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats)">
-        <img src="[https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=tokyonight&count_private=true](https://github-readme-stats.vercel.app/api?username=YOUR_USERNAME&show_icons=true&theme=tokyonight&count_private=true)" alt="My GitHub Stats"/>
+      <a href="https://github.com/anuraghazra/github-readme-stats">
+        <img src="https://github-readme-stats.vercel.app/api?username=AfrozSaqlain&show_icons=true&theme=tokyonight&count_private=true&hide_border=true&custom_title=Afroz's%20GitHub%20Journey&hide=prs" alt="Afroz's GitHub Journey"/>
       </a>
     </td>
     <td>
-      <a href="[https://github.com/anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats)">
-        <img src="[https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_USERNAME&layout=compact&theme=tokyonight](https://github-readme-stats.vercel.app/api/top-langs/?username=YOUR_USERNAME&layout=compact&theme=tokyonight)" alt="Top Languages"/>
+      <a href="https://github.com/anuraghazra/github-readme-stats">
+        <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=AfrozSaqlain&layout=compact&theme=tokyonight&hide_border=true&langs_count=10&hide=css,Jupyter%20Notebook" alt="Top Languages"/>
       </a>
     </td>
   </tr>
-</table>`, 
+  <tr>
+    <td colspan="2" align="center">
+      <a href="https://git.io/streak-stats">
+        <img src="https://github-readme-streak-stats.herokuapp.com?user=AfrozSaqlain&theme=transparent" alt="Streak"/>
+      </a>    
+    </td>
+  </tr>
+</table>
+`, 
     language: "tsx",
     label: "<github-username>/README.md"
   }
@@ -68,6 +132,25 @@ This tool is highly customizable. You can change themes, hide specific stats, an
 1. Change the Theme: Replace `theme=tokyonight` with `theme=dracula`, `theme=gruvbox`, or check the full list of themes. 
 2. Hide a Stat: Add `&hide=prs, issues` to hide your PR and issue counts.
 3. Set a Custom Title: Add `&custom_title=My%20Coding%20Journey` to change the title.
+
+
+## Views counter
+
+Again copy-paste the markdown below into your GitHub profile `README.md` and replace `YOUR_USERNAME` with your GitHub username.
+
+<CodeBlock
+    codeHeight={24}
+    marginBottom="16"
+    codes={[
+  {
+    code:
+`
+![](https://komarev.com/ghpvc/?username=YOUR_USERNAME)
+`, 
+    language: "tsx",
+    label: "<github-username>/README.md"
+  }
+]} />
 
 ## Generate an Animated Contribution Snake 🐍
 

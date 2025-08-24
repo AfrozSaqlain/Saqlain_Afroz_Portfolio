@@ -88,14 +88,7 @@ export default async function Blog({
           <ScrollToHash />
         </Column>
       </Row>
-      <Column maxWidth={16} paddingLeft="40" fitHeight position="sticky" top="80" gap="20" hide="m"style={{
-            // maxWidth: '20%',
-            // wordBreak: 'break-word' as const,
-            // hyphens: 'auto' as const,
-            // overflowWrap: 'anywhere' as const,
-            // whiteSpace: 'normal' as const,
-            // lineHeight: '1.4',
-          }}>
+      <Column maxWidth={18} paddingLeft="40" fitHeight position="sticky" top="80" gap="20" hide="m">
         <Row
           gap="12"
           paddingLeft="2"
