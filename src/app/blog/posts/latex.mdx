@@ -1,0 +1,72 @@
+---
+title: "Install LaTeX"
+summary: "Install LaTeX with and without sudo rights."
+publishedAt: "2025-09-01"
+tag: "LaTeX"
+---
+
+## What is LaTeX?
+
+LaTeX is a high-quality typesetting system used for producing professional-looking documents. It is widely used in academia and scientific communities for articles, books, and theses.
+
+## Permission denied error
+
+When running applications that use libraries like Matplotlib, you might encounter a `FileNotFoundError: [Errno 2] No such file or directory: 'latex'`. This happens when the application is configured to use LaTeX for text rendering but cannot find the `latex` executable on your system. On shared computing clusters, you typically don't have the `sudo` (administrator) privileges required to install software system-wide.
+
+## Local Installation (without sudo rights)
+
+The solution is to perform a local installation of a LaTeX distribution, such as TeX Live, within your home directory. This allows you to have a fully functional LaTeX environment without requiring root access.
+
+<CodeBlock
+    highlight="1-3"
+    codes={[
+  {
+    code:
+`# Download the installer
+wget https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz
+
+# Extract the archive and navigate into the directory
+tar -xzf install-tl-unx.tar.gz
+cd install-tl-*
+
+# Run the installer and specify a local directory
+perl ./install-tl --no-interaction -texdir ~/texlive/2025`, 
+    language: "bash",
+    label: "Terminal"
+  }
+]} />
+
+## Update your PATH
+
+Once the installation is complete, you need to add the `latex` executable to your system's `PATH`.
+
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`export PATH=~/texlive/bin/x86_64-linux:$PATH
+export MANPATH=~/texlive/texmf-dist/doc/man:$MANPATH
+export INFOPATH=~/texlive/texmf-dist/doc/info:$INFOPATH
+source ~/.bashrc`, 
+    language: "bash",
+    label: "~/.bashrc"
+  }
+]} />
+
+## System-wide Installation (with sudo rights)
+
+If you have `sudo` rights, you can install LaTeX system-wide using your distribution's package manager.
+
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`# On Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install texlive-full`, 
+    language: "bash",
+    label: "Terminal"
+  }
+]} />
