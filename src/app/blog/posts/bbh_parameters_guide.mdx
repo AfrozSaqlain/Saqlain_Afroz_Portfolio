@@ -1,0 +1,221 @@
+---
+title: "BBH Parameters in Bilby and LAL"
+summary: "Comprehensive guide to Binary Black Hole parameters used in gravitational wave analysis with bilby prior files and LAL conventions."
+publishedAt: "2025-09-02"
+tag: "Gravitational Waves"
+---
+
+## Overview
+
+Binary Black Hole (BBH) gravitational wave analysis requires careful parameterization of the system. This guide covers the parameter definitions used in bilby prior files and LAL (LIGO Algorithm Library) for both aligned and precessing spin configurations.
+
+## Common Parameters
+
+All BBH analyses share these fundamental parameters regardless of spin treatment.
+
+### Mass Parameters
+
+<CodeBlock
+    highlight="1-4"
+    codes={[
+  {
+    code:
+`mass_1 = Constraint(name='mass_1', minimum=5, maximum=100)
+mass_2 = Constraint(name='mass_2', minimum=5, maximum=100)
+mass_ratio = bilby.gw.prior.UniformInComponentsMassRatio(name='mass_ratio', minimum=0.125, maximum=1)
+chirp_mass = bilby.gw.prior.UniformInComponentsChirpMass(name='chirp_mass', minimum=25, maximum=100)`, 
+    language: "python",
+    label: "Mass parameter priors"
+  }
+]} />
+
+- **mass_1, mass_2**: Individual component masses in solar masses (M☉), with convention mass_1 ≥ mass_2
+- **mass_ratio**: q = mass_2/mass_1 ≤ 1, ensures proper mass ordering
+- **chirp_mass**: ℳ = (mass$_1$ × mass$_2$)$^{(3/5)}$ / (mass$_1$ + mass$_2$)$^{(1/5)}$, controls inspiral evolution rate
+
+### Extrinsic Parameters
+
+<CodeBlock
+    highlight="1-5"
+    codes={[
+  {
+    code:
+`luminosity_distance = bilby.gw.prior.UniformSourceFrame(name='luminosity_distance', minimum=1e2, maximum=5e3)
+dec = Cosine(name='dec')
+ra = Uniform(name='ra', minimum=0, maximum=2 * np.pi, boundary='periodic')
+theta_jn = Sine(name='theta_jn')
+psi = Uniform(name='psi', minimum=0, maximum=np.pi, boundary='periodic')
+phase = Uniform(name='phase', minimum=0, maximum=2 * np.pi, boundary='periodic')`, 
+    language: "python",
+    label: "Extrinsic parameter priors"
+  }
+]} />
+
+- **luminosity_distance**: Distance to source (100-5000 Mpc), uniform in source frame accounts for cosmological volume
+- **dec (declination)**: Polar angle on celestial sphere [-π/2, π/2], cosine prior ensures uniform sky distribution
+- **ra (right ascension)**: Azimuthal angle on celestial sphere [0, 2π]
+- **theta_jn (inclination)**: Angle between total angular momentum and line of sight [0, π]
+- **psi (polarization)**: Gravitational wave polarization angle [0, π]
+- **phase**: Coalescence phase at merger [0, 2π]
+
+## Aligned Spin Configuration
+
+For systems where spins are aligned or anti-aligned with the orbital angular momentum.
+
+<CodeBlock
+    codes={[
+  {
+    code:
+`chi_1 = bilby.gw.prior.AlignedSpin(name='chi_1', a_prior=Uniform(minimum=0, maximum=0.99))
+chi_2 = bilby.gw.prior.AlignedSpin(name='chi_2', a_prior=Uniform(minimum=0, maximum=0.99))`, 
+    language: "python",
+    label: "Aligned spin priors"
+  }
+]} />
+
+- **chi_1, chi_2**: Dimensionless aligned spin parameters [-0.99, 0.99]
+- Positive values: spin aligned with orbital angular momentum
+- Negative values: spin anti-aligned with orbital angular momentum
+- Equivalent to LAL's `spin1z`, `spin2z` when other components are zero
+
+## Precessing Spin Configuration
+
+For full 3D spin treatment allowing arbitrary spin orientations and precession effects.
+
+<CodeBlock
+    highlight="1-6"
+    codes={[
+  {
+    code:
+`a_1 = Uniform(name='a_1', minimum=0, maximum=0.99)
+a_2 = Uniform(name='a_2', minimum=0, maximum=0.99)
+tilt_1 = Sine(name='tilt_1')
+tilt_2 = Sine(name='tilt_2')
+phi_12 = Uniform(name='phi_12', minimum=0, maximum=2 * np.pi, boundary='periodic')
+phi_jl = Uniform(name='phi_jl', minimum=0, maximum=2 * np.pi, boundary='periodic')`, 
+    language: "python",
+    label: "Precessing spin priors"
+  }
+]} />
+
+### Spin Magnitudes
+- **a_1, a_2**: Dimensionless spin magnitudes [0, 0.99], where a = |**S**|/(GM²/c)
+
+### Tilt Angles
+- **tilt_1, tilt_2**: Angles between individual spins and orbital angular momentum [0, π]
+- tilt = 0: perfectly aligned
+- tilt = π/2: in orbital plane
+- tilt = π: anti-aligned
+- Sine prior ensures uniform distribution on sphere
+
+### Azimuthal Angles
+- **phi_12**: Difference in azimuthal angles of the two spins [0, 2π]
+- **phi_jl**: Azimuthal angle between total angular momentum J and orbital L [0, 2π]
+
+## LAL Spin Conventions
+
+LAL uses Cartesian spin components, providing direct physical interpretation.
+
+<CodeBlock
+    codes={[
+  {
+    code:
+`# LAL Cartesian spin components
+spin1x, spin1y, spin1z  # x, y, z components of spin 1 vector
+spin2x, spin2y, spin2z  # x, y, z components of spin 2 vector
+
+# Constraint: |S| ≤ 0.99
+# sqrt(spin1x² + spin1y² + spin1z²) ≤ 0.99`, 
+    language: "python",
+    label: "LAL spin parameterization"
+  }
+]} />
+
+### Key Components
+- **spin1z, spin2z**: z-components along orbital angular momentum direction
+- **spin1x, spin1y**: In-plane components causing precession
+- Each component ∈ [-0.99, 0.99] with constraint |**S**| ≤ 0.99
+
+## Parameter Conversions
+
+Understanding the relationships between different parameterizations is crucial for analysis.
+
+### Aligned to Cartesian
+<CodeBlock
+    codes={[
+  {
+    code:
+`# For aligned spins (bilby to LAL)
+spin1z = chi_1  # (when spin1x = spin1y = 0)
+spin2z = chi_2  # (when spin2x = spin2y = 0)
+
+# Effective aligned spin
+chi_eff = (mass_1 * chi_1 + mass_2 * chi_2) / (mass_1 + mass_2)`, 
+    language: "python",
+    label: "Aligned spin conversion"
+  }
+]} />
+
+### Precessing to Cartesian
+<CodeBlock
+    codeHeight={12}
+    codes={[
+  {
+    code:
+`# Spherical to Cartesian conversion
+spin1x = a_1 * sin(tilt_1) * cos(phi_1)
+spin1y = a_1 * sin(tilt_1) * sin(phi_1)
+spin1z = a_1 * cos(tilt_1)
+
+spin2x = a_2 * sin(tilt_2) * cos(phi_2)
+spin2y = a_2 * sin(tilt_2) * sin(phi_2)
+spin2z = a_2 * cos(tilt_2)
+
+# where phi_1, phi_2 are derived from phi_12 and phi_jl
+# phi_1 = phi_jl - phi_12/2
+# phi_2 = phi_jl + phi_12/2`, 
+    language: "python",
+    label: "Precessing spin conversion"
+  }
+]} />
+
+## Physical Interpretation
+
+### Effective Spin Parameters
+
+<CodeBlock
+    codes={[
+  {
+    code:
+`# Effective aligned spin (affects inspiral rate)
+chi_eff = (m1*chi_1 + m2*chi_2) / (m1 + m2)
+
+# Effective precessing spin (measures precession strength)  
+chi_p = max(a1*sin(tilt_1), a2*q*sin(tilt_2)) / (1 + q)
+
+# where q = m2/m1`, 
+    language: "python",
+    label: "Effective spin calculations"
+  }
+]} />
+
+### Parameterization Trade-offs
+
+**Aligned Spins:**
+- **Advantages**: Computationally efficient (2 vs 6 parameters), faster sampling
+- **Limitations**: Cannot capture precession effects, spin-orbit coupling
+- **Use case**: Quick analysis, systems with small spin tilts
+
+**Precessing Spins:**
+- **Advantages**: Full physical generality, captures all spin effects
+- **Limitations**: Higher computational cost, more complex parameter space
+- **Use case**: Detailed analysis, systems with significant precession
+
+**LAL Cartesian:**
+- **Advantages**: Direct physical components, straightforward for waveform generation
+- **Limitations**: Can be inefficient for sampling (correlations between components)
+- **Use case**: Waveform development, post-processing analysis
+
+## Background Physics
+
+The choice of spin parameterization significantly impacts both the computational efficiency and physical insights of gravitational wave analysis. Aligned spin treatments are sufficient for many astrophysical scenarios, while precessing spins become crucial for understanding spin-orbit coupling, formation channels, and detailed source properties.
