@@ -1,4 +1,4 @@
-import { About, Blog, CV, Gallery, Home, Newsletter, Person, Social, Work } from "@/types";
+import { About, Blog, CV, Gallery, Home, Newsletter, Notes, Person, Social, Work } from "@/types";
 import { Logo } from "@once-ui-system/core";
 
 const person: Person = {
@@ -241,6 +241,15 @@ const cv: CV = {
   // All posts will be listed on the /blog route
 };
 
+const notes: Notes = {
+  path: "/notes",
+  label: "Notes",
+  title: "Saqlain Afroz's Academic Notes",
+  description: `Read from ${person.name}'s notes on phycis and mathematics`,
+  // Create new blog posts by adding a new .mdx file to app/blog/posts
+  // All posts will be listed on the /blog route
+};
+
 const work: Work = {
   path: "/work",
   label: "Work",
@@ -301,4 +310,4 @@ const gallery: Gallery = {
   ],
 };
 
-export { person, social, newsletter, home, about, blog, cv, work, gallery };
+export { person, social, newsletter, home, about, blog, cv, notes, work, gallery };

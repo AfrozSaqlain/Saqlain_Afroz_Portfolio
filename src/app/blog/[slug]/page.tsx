@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Summarizer from "@/components/Summarizer"; 
 import { CustomMDX, ScrollToHash } from "@/components";
 import { Meta, Schema, AvatarGroup, Button, Column, Heading, HeadingNav, Icon, Row, Text } from "@once-ui-system/core";
 import { baseURL, about, blog, person } from "@/resources";
@@ -82,6 +83,10 @@ export default async function Blog({
               {post.metadata.publishedAt && formatDate(post.metadata.publishedAt)}
             </Text>
           </Row>
+
+          {/* --- NEW --- Place the Summarizer component right before the article content */}
+          {/* <Summarizer articleText={post.content} /> */}
+          
           <Column as="article" fillWidth>
             <CustomMDX source={post.content} />
           </Column>

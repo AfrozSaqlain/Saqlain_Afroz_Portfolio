@@ -20,6 +20,7 @@ const routes: RoutesConfig = {
   "/about": true,
   "/work": true,
   "/cv": true,
+  "/notes": true,
   "/blog": true,
   "/gallery": true,
 };
@@ -35,6 +36,7 @@ const display: DisplayConfig = {
 const protectedRoutes: ProtectedRoutesConfig = {
   "/work/deep-learning-in-gravitational-wave-astrophysics": true,
   "/work/using-pinns-for-solving-complex-differential-equations": true,
+  "/work/surrogate-modelling-ofeccentric-waveforms": true,
 };
 
 // Import and set font for each variant

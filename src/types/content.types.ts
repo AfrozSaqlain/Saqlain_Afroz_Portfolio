@@ -221,6 +221,12 @@ export interface Blog extends BasePageConfig {}
 export interface CV extends BasePageConfig {}
 
 /**
+ * Notes page configuration.
+ * @description Configuration for the Notes page, including metadata and navigation label.
+ */
+export interface Notes extends BasePageConfig {}
+
+/**
  * Work/projects page configuration.
  * @description Configuration for the Work/Projects page, including metadata and navigation label.
  */
