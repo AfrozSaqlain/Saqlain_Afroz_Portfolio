@@ -1,0 +1,46 @@
+---
+title: "Surrogate modelling of eccentric waveforms"
+publishedAt: "2025-08-08"
+summary: "Surrogate modelling of eccentric waveforms using ROM and Empirical Interpolation Method"
+team:
+  - name: "Saqlain Afroz"
+    role: "Student"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/in/saqlain-afroz/"
+  - name: "Prof. Prayush Kumar"
+    role: "Professor"
+    avatar: "/images/projects/project-05/pk.jpeg"
+    linkedIn: "https://www.linkedin.com/in/prayush-kumar/"
+link: "https://github.com/AfrozSaqlain/Surrogate_GW"
+---
+
+import { Card, Avatar, Badge } from 'once-ui'
+import Image from 'next/image'
+
+export const meta = {
+  title: "Surrogate modelling of eccentric waveforms",
+  publishedAt: "2025-08-08",
+  summary: "Surrogate modelling of eccentric waveforms using ROM and Empirical Interpolation Method"
+}
+
+# Surrogate modelling of eccentric waveforms
+
+This script generates time-domain gravitational-wave signals for a grid of mass-ratio (q) and spin (chi) values using PyCBC, converts them to the frequency domain, separates amplitude and phase (and normalizes amplitude), compresses the (high-dimensional) frequency information with an SVD basis on a sparse frequency grid, interpolates the projection coefficients across parameter space using tensor-product interpolation (so the basis coefficients become smooth functions of (q,chi)), and finally builds a fast “surrogate” evaluator that reconstructs frequency-domain waveforms for new (q,chi). It validates the surrogate by comparing amplitude/phase and computing a matched-filter mismatch.
+
+---
+
+## High-level pipeline
+
+A surrogate model replaces costly waveform generation (time-domain ODEs or expensive templates) with a **fast interpolant** built from a training set of precomputed waveforms. The pipeline:
+
+1. Generate time-domain waveforms on a parameter grid and convert, apply **Tukey** window to taper the time series and then apply zero padding. Then apply FFT to go to frequency domain.
+2. Extract **amplitude** and **phase**. We then unwrap the phase and remove linear phase trend to account for time and phase shifts. Then we anchor the phase to zero at the start frequency. Normalize amplitude to unit norm.
+3. Reduce frequency-domain representation onto **sparse frequency grids** (amplitude and phase separately). This is done using Power Law spacing method to build frequency grids that concentrate points where needed (low or high f, corresponding to high or low power, respectively).
+4. Interpolate waveforms onto sparse grids using 1D splines (for both, amplitude and phase) evaluated on sparse grids. Then build matrices A_mat and Phi_mat of shape (freq × sample), such that the rows correspond to the frequency and columns correspond to the GW signals.
+5. Compute a **reduced basis** (SVD) on the sparse grids by keepinf the first $r$ singular values/vectors, where $r$ is chosen to achieve a desired accuracy (e.g. 1e-6). This gives reduced basis matrices $B_{A}$ and $B_{\phi}$ of shape (freq × r).
+6. Project the training waveforms onto the reduced bases to get projection coefficients ($c_{A}$ and $c_{\phi}$) of shape (r × sample).
+7. Interpolate the projection coefficients across parameter space using tensor-product cubic splines (for both, amplitude and phase), such as `RectBivariateSpline`.
+8. The surrogate model is then evaluated by reconstructing the amplitude and phase at new parameter values using the interpolated coefficients and the reduced bases, and combining them to get the complex frequency-domain waveform. Optionally, the frequency-domain waveform can be transformed back to the time domain using an inverse FFT.
+
+
+
