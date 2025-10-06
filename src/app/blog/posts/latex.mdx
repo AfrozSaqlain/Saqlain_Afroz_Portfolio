@@ -63,9 +63,56 @@ If you have `sudo` rights, you can install LaTeX system-wide using your distribu
     codes={[
   {
     code:
-`# On Ubuntu/Debian
+`# On Linux
 sudo apt-get update
 sudo apt-get install texlive-full`, 
+    language: "bash",
+    label: "Terminal"
+  }
+]} />
+
+## Installing additional LaTeX packages
+
+You might also need `tracklang.sty` and to check where it is in the Pacman repository, first run the following command:
+
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`# On Arch Linux
+sudo pacman -Fy
+pacman -F tracklang.sty
+`, 
+    language: "bash",
+    label: "Terminal"
+  }
+]} />
+
+You might see something like this:
+
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`extra/texlive-plaingeneric 2025.2-2 (texlive)
+    usr/share/texmf-dist/tex/latex/tracklang/tracklang.sty
+`, 
+    language: "bash",
+    label: "Terminal"
+  }
+]} />
+
+Then simply run:
+
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`sudo pacman -S texlive-plaingeneric
+`, 
     language: "bash",
     label: "Terminal"
   }
