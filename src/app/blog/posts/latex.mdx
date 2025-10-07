@@ -54,6 +54,20 @@ source ~/.bashrc`,
   }
 ]} />
 
+<CodeBlock
+    highlight="1"
+    codes={[
+  {
+    code:
+`
+echo 'export PATH=~/texlive/2025/bin/x86_64-linux:$PATH' >> ~/.zshrc
+source ~/.zshrc`, 
+    language: "bash",
+    label: "~/.bashrc"
+  }
+]} />
+
+
 ## System-wide Installation (with sudo rights)
 
 If you have `sudo` rights, you can install LaTeX system-wide using your distribution's package manager.
