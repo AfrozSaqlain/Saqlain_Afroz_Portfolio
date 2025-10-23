@@ -1,0 +1,50 @@
+---
+title: "Normalizing Flows in GW astronomy."
+publishedAt: "2025-09-22"
+summary: "Developed a normlaizing flow model to do parameter estimation of lensed gravitational waves."
+team:
+  - name: "Saqlain Afroz"
+    role: "Student"
+    avatar: "/images/avatar.jpg"
+    linkedIn: "https://www.linkedin.com/company/once-ui/"
+  - name: "Dr. Apratim Ganguly"
+    role: "Scietific Officer"
+    avatar: "/images/projects/project-01/apratim.jpg"
+    linkedIn: "https://www.linkedin.com/company/once-ui/"
+  - name: "Dr. Anuj Mishra"
+    role: "Post Doc ICTS"
+    avatar: "/images/projects/project-01/anuj.jpg"
+    linkedIn: "https://www.linkedin.com/company/once-ui/"
+link: "https://github.com/AfrozSaqlain/GWFlows"
+---
+# 🔭 GWFlows Project Overview
+
+A machine learning toolkit to train and make inference on lensed gravitational waves. This pipeline helps generate posterior distribution of $\theta$ parameters of a lensed GW event within fraction of seconds, whereas the traditional MCMC would take hours to days.
+
+# 🖥️ Command Line Interface (CLI)
+`generate_dataset_gwflows` : --num-samples [int] --snr-prior [str : powerlaw,uniform]
+`nf_train_gwflows` : --config-path [str: name of the .yaml file which provides configuration for normalizing flow model] --data-path [str: name of dataset file]
+`nf_inference_gwflows` --config-path [str: name of the .yaml file which provides configuration for instantiating the normalizing flow model which is then loaded onto a pre-saved model] --data-path [str: name of dataset file]
+
+# 🌊 How GW waveforms are generated
+
+
+## 📋 Prior Distributions Table
+
+| **Parameter**   | **Distribution Type**              | **Range / Description**       |
+|------------------|------------------------------------|-------------------------------|
+| `mass1`         | `Constraint`                       | [10, 100]                     |
+| `mass2`         | `Constraint`                       | [10, 100]                     |
+| `mass_ratio`    | `UniformInComponentsMassRatio`     | [0.1, 1]                     |
+| `chirp_mass`    | `UniformInComponentsChirpMass`     | [10, 100]                     |
+| `spin1z`        | `Uniform`                          | [-0.9, 0.9]                    |
+| `spin2z`        | `Uniform`                          | [-0.9, 0.9]                    |
+| `coa_phase`     | `Uniform`                          | [0.0, 2π]                     |
+| `SNR`           | `PowerLaw` (`α = -4`)              | [10, 500]                   |
+| `dec`           | `Cosine`                           | [−π/2, π/2]                   |
+| `ra`            | `Uniform` (periodic)               | [0, 2π]                       |
+| `polarization`  | `Uniform` (periodic)               | [0, π]                        |
+| `Log_Mlz`       | `Uniform`                          | [2, 5]                        |
+| `yl`            | `PowerLaw` (`α = 1`)               | [0.01, 1.0]                   |
+
+

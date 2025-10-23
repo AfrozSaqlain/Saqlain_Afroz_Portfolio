@@ -36,11 +36,13 @@ perl ./install-tl --no-interaction -texdir ~/texlive/2025`,
   }
 ]} />
 
+For the third command you need to create a directory at this location `~/texlive/2025` with the same name.
+
 ## Update your PATH
 
 Once the installation is complete, you need to add the `latex` executable to your system's `PATH`.
 
-<CodeBlock
+{/* <CodeBlock
     highlight="1"
     codes={[
   {
@@ -52,7 +54,7 @@ source ~/.bashrc`,
     language: "bash",
     label: "~/.bashrc"
   }
-]} />
+]} /> */}
 
 <CodeBlock
     highlight="1"
@@ -63,14 +65,15 @@ source ~/.bashrc`,
 echo 'export PATH=~/texlive/2025/bin/x86_64-linux:$PATH' >> ~/.zshrc
 source ~/.zshrc`, 
     language: "bash",
-    label: "~/.bashrc"
+    label: "~/.zshrc"
   }
 ]} />
 
+You can use `bashrc` if you do not use `zshrc`.
 
 ## System-wide Installation (with sudo rights)
 
-If you have `sudo` rights, you can install LaTeX system-wide using your distribution's package manager.
+If you have `sudo` rights, you can install LaTeX system-wide using your distribution's package manager. This is an example for command line in Ubuntu:
 
 <CodeBlock
     highlight="1"
