@@ -19,32 +19,48 @@ link: "https://github.com/AfrozSaqlain/GWFlows"
 ---
 # 🔭 GWFlows Project Overview
 
-A machine learning toolkit to train and make inference on lensed gravitational waves. This pipeline helps generate posterior distribution of $\theta$ parameters of a lensed GW event within fraction of seconds, whereas the traditional MCMC would take hours to days.
+Normalizing Flows is a generative model which can be used to generate posterior samples conditioned on a GW signal. Normlaizing Flow works on the principle of change of varibables in statistics. To build a normlaizing flow model we take a sequence of bijective functions, which takes samples from a distribution and maps it to a Standard Normal distribution. Since we want the model to be conditioned on GW signal, we give the signal as an additional context to the model. Suppose $f: \theta \to u$, then the predictedd posterior $q(\theta | d)$ is given by the change of variables formula as:
 
-# 🖥️ Command Line Interface (CLI)
-`generate_dataset_gwflows` : --num-samples [int] --snr-prior [str : powerlaw,uniform]
-`nf_train_gwflows` : --config-path [str: name of the .yaml file which provides configuration for normalizing flow model] --data-path [str: name of dataset file]
-`nf_inference_gwflows` --config-path [str: name of the .yaml file which provides configuration for instantiating the normalizing flow model which is then loaded onto a pre-saved model] --data-path [str: name of dataset file]
+$$
+  q(\vec{\theta} | d) = \mathcal{N}(0, \mathbf{1}) (f(\theta) | d) \cdot |\text{det } J_{f_d}(\vec{\theta})|
+$$
 
-# 🌊 How GW waveforms are generated
+where $f_d$ represent the FNN neural network part conditioned on the observed data $d$. In the case of parameter estimation of GWs, we define the $\mathcal{N}(0, \mathbf{1})$ to be a multivariate one.
 
+This function $f$ can be defined in many different ways, but in this project we have used rational quadratic spline transform, which conditions the $\theta_i$ parameters on $\theta_{< i}$ parameters, as well as on data $d$.
+
+The loss that we minimize is the Kullback-Leibler Divergence of true vs predicted posterior, which is equivalent to log of the predicted probability as given in above equation.
+
+To generate the waveforms for the training set, we have used the prior distribution, as given in table below.
 
 ## 📋 Prior Distributions Table
 
-| **Parameter**   | **Distribution Type**              | **Range / Description**       |
-|------------------|------------------------------------|-------------------------------|
-| `mass1`         | `Constraint`                       | [10, 100]                     |
-| `mass2`         | `Constraint`                       | [10, 100]                     |
-| `mass_ratio`    | `UniformInComponentsMassRatio`     | [0.1, 1]                     |
-| `chirp_mass`    | `UniformInComponentsChirpMass`     | [10, 100]                     |
-| `spin1z`        | `Uniform`                          | [-0.9, 0.9]                    |
-| `spin2z`        | `Uniform`                          | [-0.9, 0.9]                    |
-| `coa_phase`     | `Uniform`                          | [0.0, 2π]                     |
-| `SNR`           | `PowerLaw` (`α = -4`)              | [10, 500]                   |
-| `dec`           | `Cosine`                           | [−π/2, π/2]                   |
-| `ra`            | `Uniform` (periodic)               | [0, 2π]                       |
-| `polarization`  | `Uniform` (periodic)               | [0, π]                        |
-| `Log_Mlz`       | `Uniform`                          | [2, 5]                        |
-| `yl`            | `PowerLaw` (`α = 1`)               | [0.01, 1.0]                   |
 
+<Table
+  data={{
+    headers: [
+      { content: "Parameter", key: "parameter", sortable: true },
+      { content: "Distribution Type", key: "distribution_type", sortable: true },
+      { content: "Range / Description", key: "range_description" }
+    ],
+    rows: [
+      ["mass1", "Constraint", "[10, 100]"],
+      ["mass2", "Constraint", "[10, 100]"],
+      ["mass_ratio", "UniformInComponentsMassRatio", "[0.1, 1]"],
+      ["chirp_mass", "UniformInComponentsChirpMass", "[10, 100]"],
+      ["spin1z", "Uniform", "[-0.9, 0.9]"],
+      ["spin2z", "Uniform", "[-0.9, 0.9]"],
+      ["coa_phase", "Uniform", "[0.0, 2π]"],
+      ["SNR", "PowerLaw (α = -4)", "[10, 500]"],
+      ["dec", "Cosine", "[−π/2, π/2]"],
+      ["ra", "Uniform (periodic)", "[0, 2π]"],
+      ["polarization", "Uniform (periodic)", "[0, π]"],
+      ["Log_Mlz", "Uniform", "[2, 5]"],
+      ["yl", "PowerLaw (α = 1)", "[0.01, 1.0]"]
+    ]
+  }}
+/>
 
+## inference
+
+While inferring parameters we sample from the standard normal multivariate distribution and apply the inverse flow to get the true posteriors.

@@ -268,14 +268,14 @@ const gallery: Gallery = {
   // These are placeholder images, replace with your own
   images: [
     {
-      src: "/images/gallery/horizontal-1.jpg",
+      src: "/images/gallery/ICTS_ft_Stephen_Green.jpg",
       alt: "image",
-      orientation: "horizontal",
+      orientation: "vertical",
     },
     {
-      src: "/images/gallery/horizontal-2.jpg",
+      src: "/images/gallery/Jensen_Huang.jpg",
       alt: "image",
-      orientation: "horizontal",
+      orientation: "vertical",
     },
     {
       src: "/images/gallery/horizontal-3.jpg",
