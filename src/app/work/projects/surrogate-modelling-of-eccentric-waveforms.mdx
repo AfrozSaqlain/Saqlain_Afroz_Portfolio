@@ -43,4 +43,92 @@ A surrogate model replaces costly waveform generation (time-domain ODEs or expen
 8. The surrogate model is then evaluated by reconstructing the amplitude and phase at new parameter values using the interpolated coefficients and the reduced bases, and combining them to get the complex frequency-domain waveform. Optionally, the frequency-domain waveform can be transformed back to the time domain using an inverse FFT.
 
 
+# 🚀 Surrogate Model Project Overview
 
+This project details the construction of a surrogate model for gravitational waveforms, $\tilde{H}(f; \lambda)$. The goal is to create a computationally inexpensive "emulator" that accurately approximates a complex, high-fidelity "true" model, $H(f; \lambda)$, over a 2D parameter space $\lambda = (q, \chi)$ (mass-ratio and effective spin).
+
+The method is based on the **Reduced Basis (RB)** technique, which is combined with **Singular Value Decomposition (SVD)**. The core idea is to separate the complex waveform $H(f) = A(f)e^{i\Phi(f)}$ into its amplitude and phase components, build independent reduced bases for each, and then interpolate the basis coefficients across the parameter space.
+
+This construction is divided into two phases: a one-time, computationally intensive "Offline" stage to build the model, and a near-instantaneous "Online" stage to evaluate it.
+
+## 🏗️ Building the Model: The "Offline" Stage
+
+This is the main construction phase where we generate training data and build the interpolants.
+
+### Step I: Generate Training Data
+We first sample the parameter space $\Lambda = [q_{\min}, q_{\max}] \times [\chi_{\min}, \chi_{\max}]$ on a 2D tensor grid, creating $N$ parameter pairs $\lambda_i = (q_i, \chi_i)$. For each $\lambda_i$, we generate the "true" waveform $H(f; \lambda_i)$ and decompose it into amplitude $A(f; \lambda_i)$ and phase $\Phi(f; \lambda_i)$.
+
+A key step is to normalize the amplitude by its $L^2$-norm, $\mathcal{N}(\lambda_i)$, to separate the waveform's "shape" from its "magnitude":
+$$
+  \mathcal{N}(\lambda_i) = \left( \sum_f |A(f; \lambda_i)|^2 \Delta f \right)^{1/2}
+$$
+$$
+  \tilde{A}(f; \lambda_i) = \frac{A(f; \lambda_i)}{\mathcal{N}(\lambda_i)}
+$$
+Our training set is now $\{ (\tilde{A}(f; \lambda_i), \Phi(f; \lambda_i), \mathcal{N}(\lambda_i)) \}_{i=1}^N$.
+
+### Step II: Create Sparse Snapshot Matrices
+We define two sparse, non-uniform frequency grids, $F_A$ (for amplitude) and $F_\Phi$ (for phase), which have far fewer points ($m$ and $p$) than the original dense grid. We use 1D splines to interpolate each waveform onto these sparse grids, creating snapshot vectors $\vec{a}_i \in \mathbb{R}^m$ and $\vec{\phi}_i \in \mathbb{R}^p$.
+
+These vectors are collected as columns to form the two "snapshot matrices":
+$$
+  A_{\text{mat}} = [\vec{a}_1, \vec{a}_2, \dots, \vec{a}_N] \in \mathbb{R}^{m \times N}
+$$
+$$
+  \Phi_{\text{mat}} = [\vec{\phi}_1, \vec{\phi}_2, \dots, \vec{\phi}_N] \in \mathbb{R}^{p \times N}
+$$
+
+### Step III: Compute Reduced Basis via SVD
+We perform a Singular Value Decomposition (SVD) on each snapshot matrix to find the optimal basis for the space spanned by our training waveforms.
+$$
+  A_{\text{mat}} = U_a S_a V_a^T \quad \text{and} \quad \Phi_{\text{mat}} = U_p S_p V_p^T
+$$
+The columns of $U_a$ and $U_p$ are the "basis vectors". We truncate these to a small rank, $R_a=10$ and $R_p=10$, to create our compact **Reduced Basis (RB)** matrices:
+$$
+  B_a = U_a[:, :R_a] \in \mathbb{R}^{m \times R_a}
+$$
+$$
+  B_p = U_p[:, :R_p] \in \mathbb{R}^{p \times R_p}
+$$
+
+### Step IV: Interpolate Projection Coefficients
+Any waveform can now be approximated as a linear combination of these basis vectors, e.g., $\vec{a}_i \approx B_a \vec{c}_{a,i}$. We find the coefficients $\vec{c}_{a,i}$ for all training waveforms by simple projection:
+$$
+  C_a = B_a^T A_{\text{mat}} \in \mathbb{R}^{R_a \times N}
+$$
+$$
+  C_p = B_p^T \Phi_{\text{mat}} \in \mathbb{R}^{R_p \times N}
+$$
+The $k$-th row of $C_a$ contains the values of the $k$-th coefficient across the $(q, \chi)$ grid. We create a 2D interpolator (e.g., `RectBivariateSpline`) for each of the $R_a$ amplitude coefficients, each of the $R_p$ phase coefficients, and one for the $L^2$-norm grid, $\mathcal{N}(\lambda_i)$.
+
+This set of $R_a + R_p + 1$ interpolators *is* the surrogate model.
+
+## ⚡️ Using the Model: The "Online" Stage
+
+This is the fast evaluation step, which is what a user of the surrogate would call.
+
+### Step V: Evaluate the Surrogate
+To get a waveform at a new, arbitrary point $\lambda^* = (q^*, \chi^*)$ on a desired frequency grid $F_{\text{out}}$:
+
+1.  **Evaluate Coefficients:** Call all $R_a + R_p + 1$ interpolators at $(q^*, \chi^*)$ to get the coefficient vectors $\vec{c}_a^*, \vec{c}_p^*$ and the norm $\mathcal{N}^*$.
+2.  **Reconstruct on Sparse Grid:** Linearly combine the basis vectors: $\vec{a}_{\text{sparse}}^* = B_a \vec{c}_a^*$ and $\vec{\phi}_{\text{sparse}}^* = B_p \vec{c}_p^*$.
+3.  **Interpolate to Output Grid:** Build two 1D splines from $(\vec{a}_{\text{sparse}}^*, F_A)$ and $(\vec{\phi}_{\text{sparse}}^*, F_\Phi)$ and evaluate them on $F_{\text{out}}$ to get $\tilde{A}_{\text{surr}}(f)$ and $\Phi_{\text{surr}}(f)$.
+4.  **Re-scale Amplitude:** Apply the interpolated norm: $A_{\text{final}}(f) = \tilde{A}_{\text{surr}}(f) \cdot \mathcal{N}^*$.
+5.  **Assemble:** Combine the final amplitude and phase:
+    $$
+      H_{\text{surr}}(f; \lambda^*) = A_{\text{final}}(f) \exp(i \Phi_{\text{surr}}(f))
+    $$
+
+## 📊 Validation
+
+The model is validated by computing the **mismatch** $\mathcal{M}$ between the surrogate waveform $H_{\text{surr}}$ and the true waveform $H_{\text{true}}$ at random points in the parameter space.
+$$
+  \mathcal{M} = 1 - \mathcal{O}(H_{\text{true}}, H_{\text{surr}})
+$$
+where $\mathcal{O}$ is the noise-weighted inner product (match), optimized over time and phase. Our test cases (e.g., $q=2.3, \chi=0.98$) show mismatches on the order of $\sim 10^{-4}$, demonstrating high fidelity.
+
+<img 
+  src="/images/projects/project-05/Speedup_vs_Mass.png" 
+  alt="Surrogate vs True Waveform Plot" 
+  style={{ objectFit: 'contain', height: 'auto', width: '100%' }} 
+/>
