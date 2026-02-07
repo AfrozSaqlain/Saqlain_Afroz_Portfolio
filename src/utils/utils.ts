@@ -15,7 +15,7 @@ type Metadata = {
   summary: string;
   image?: string;
   images: string[];
-  tag?: string;
+  tag?: string[];
   team: Team[];
   link?: string;
 };
@@ -37,6 +37,11 @@ function readMDXFile(filePath: string) {
 
   const rawContent = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(rawContent);
+  const normalizedTags = Array.isArray(data.tag)
+    ? data.tag.filter(Boolean).map((tag) => String(tag))
+    : data.tag
+      ? [String(data.tag)]
+      : [];
 
   const metadata: Metadata = {
     title: data.title || "",
@@ -44,7 +49,7 @@ function readMDXFile(filePath: string) {
     summary: data.summary || "",
     image: data.image || "",
     images: data.images || [],
-    tag: data.tag || [],
+    tag: normalizedTags,
     team: data.team || [],
     link: data.link || "",
   };

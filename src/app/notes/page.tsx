@@ -1,6 +1,9 @@
-import { Column, Meta, Schema } from "@once-ui-system/core";
+import { Column, Meta, Schema, Text } from "@once-ui-system/core";
+import { NotesBrowser } from "@/components/notes/NotesBrowser";
+
 import { baseURL, about, person, notes } from "@/resources";
-import { Projects } from "@/components/work/Projects";
+import { getPosts } from "@/utils/utils";
+
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -13,23 +16,32 @@ export async function generateMetadata() {
 }
 
 export default function Notes() {
+  const posts = getPosts(["src", "app", "notes", "posts"])
+    .sort((a, b) => new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime());
+
   return (
-    <Column maxWidth="m">
+    <Column maxWidth="s">
       <Schema
-        as="webPage"
+        as="blogPosting"
         baseURL={baseURL}
-        path={notes.path}
         title={notes.title}
         description={notes.description}
+        path={notes.path}
         image={`/api/og/generate?title=${encodeURIComponent(notes.title)}`}
         author={{
           name: person.name,
-          url: `${baseURL}${about.path}`,
+          url: `${baseURL}/notes`,
           image: `${baseURL}${person.avatar}`,
         }}
       />
-      {/* <Projects /> */}
-      <p style={{ textAlign: "center" }}>To be developed in near future.</p>
+
+      {/* <Heading marginBottom="l" variant="display-strong-s">
+        {notes.title}
+      </Heading> */}
+      <Text variant="body-default-m" onBackground="accent-weak" marginBottom="16">
+        This section is under construction.
+      </Text>
+      <NotesBrowser posts={posts} />
     </Column>
   );
 }
