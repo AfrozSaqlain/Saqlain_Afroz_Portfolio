@@ -1,0 +1,28 @@
+---
+title: "Run Python in a Blog Post (Demo)"
+summary: "A demonstration of running Python code and installing packages directly inside a blog page."
+publishedAt: "2026-02-08"
+tag: "Python"
+---
+
+## Interactive Python in Blog
+
+This demo adds a notebook-like Python cell directly to the blog page using Pyodide (Python running in the browser via WebAssembly).
+
+- Run Python scripts from the page
+- Install Python packages with `micropip` (pure-python packages work best)
+- Reuse this same component in any other `.mdx` post
+
+<PythonPlayground
+  initialCode={`import math
+print("sin(pi / 2) =", math.sin(math.pi / 2))
+
+total = sum(i * i for i in range(1, 6))
+print("sum of squares 1..5 =", total)`}
+/>
+
+## Notes
+
+- This is browser-side Python, not a full backend Jupyter server.
+- Some scientific packages may not install unless compatible with Pyodide.
+- If you need full Jupyter notebooks (`.ipynb` UI, multi-cell state, kernels), the next step is embedding JupyterLite or connecting to a hosted notebook service.

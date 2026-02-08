@@ -11,6 +11,10 @@ interface PostProps {
 }
 
 export default function Post({ post, thumbnail, direction }: PostProps) {
+    const tagLabel = Array.isArray(post.metadata.tag)
+        ? post.metadata.tag[0]
+        : post.metadata.tag;
+
     return (
         <SmartLink
             fillWidth
@@ -55,10 +59,10 @@ export default function Post({ post, thumbnail, direction }: PostProps) {
                         onBackground="neutral-weak">
                         {formatDate(post.metadata.publishedAt, false)}
                     </Text>
-                    { post.metadata.tag &&
+                    { tagLabel &&
                         <Tag
                             className="mt-12"
-                            label={post.metadata.tag}
+                            label={tagLabel}
                             variant="neutral" />
                     }
                 </Column>

@@ -1,0 +1,31 @@
+---
+title: "Embedded Jupyter Notebook in Blog (JupyterLite Demo)"
+summary: "A full .ipynb-style notebook interface directly inside a blog post using JupyterLite."
+publishedAt: "2026-02-08"
+tag: "Jupyter"
+---
+
+## Full Notebook Experience Inside the Blog
+
+This demo embeds a real JupyterLab-like interface inside the blog, including notebook cells and kernel-backed execution in the browser.
+
+<JupyterLiteEmbed />
+
+## How to reuse in any blog
+
+Add this in any blog `.mdx` file:
+
+```mdx
+<JupyterLiteEmbed />
+```
+
+You can also target a specific notebook URL:
+
+```mdx
+<JupyterLiteEmbed src="https://your-jupyterlite-site/lab/index.html?path=notebooks/your_file.ipynb" height={780} />
+```
+
+## Notes
+
+- This is client-side Jupyter via WebAssembly (no backend server required).
+- For private notebooks, host your own JupyterLite build and pass its URL in `src`.

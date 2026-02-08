@@ -5,6 +5,14 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   const posts = getPosts(['src', 'app', 'blog', 'posts']);
   
+  const getCategories = (tag: string | string[] | undefined) => {
+    if (!tag) return '';
+    if (Array.isArray(tag)) {
+      return tag.map((entry) => `<category>${entry}</category>`).join('');
+    }
+    return `<category>${tag}</category>`;
+  };
+  
   // Sort posts by date (newest first)
   const sortedPosts = posts.sort((a, b) => {
     return new Date(b.metadata.publishedAt).getTime() - new Date(a.metadata.publishedAt).getTime();
@@ -35,7 +43,7 @@ export async function GET() {
       <pubDate>${new Date(post.metadata.publishedAt).toUTCString()}</pubDate>
       <description><![CDATA[${post.metadata.summary}]]></description>
       ${post.metadata.image ? `<enclosure url="${baseURL}${post.metadata.image}" type="image/jpeg" />` : ''}
-      ${post.metadata.tag ? `<category>${post.metadata.tag}</category>` : ''}
+      ${getCategories(post.metadata.tag)}
       <author>${person.email || 'noreply@example.com'} (${person.name})</author>
     </item>`).join('')}
   </channel>

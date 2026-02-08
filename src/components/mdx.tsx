@@ -1,5 +1,7 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
 import React, { ReactNode } from "react";
+import { PythonPlayground } from "@/components/PythonPlayground";
+import { JupyterLiteEmbed } from "@/components/JupyterLiteEmbed";
 
 import { 
   Heading,
@@ -187,7 +189,9 @@ const components = {
   Particle,
   Globe,
   SiLinkedin, 
-  SiGithub
+  SiGithub,
+  PythonPlayground,
+  JupyterLiteEmbed,
 };
 
 type CustomMDXProps = MDXRemoteProps & {
