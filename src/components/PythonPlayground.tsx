@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, Column, Flex, Text } from "@once-ui-system/core";
+import Image from "next/image";
 
 type PyodideLike = {
   loadPackage: (name: string) => Promise<void>;
@@ -243,12 +244,15 @@ print("Installed ${escapedName}")
             Plots
           </Text>
           {plotImages.map((src, index) => (
-            <img
+            <Image
               key={`${src}-${index}`}
               src={src}
               alt={`Python plot ${index + 1}`}
+              width={800}
+              height={600}
               style={{
                 width: "100%",
+                height: "auto",
                 border: "1px solid var(--neutral-alpha-medium)",
                 borderRadius: "10px",
                 background: "white",
