@@ -64,7 +64,7 @@ const home: Home = {
         Recent project: <strong className="ml-4">MLGW</strong>
       </>
     ),
-    href: "/work/deep-learning-in-gravitational-wave-astrophysics",
+    href: "/docs/Saqlain_Afroz.pdf",
   },
   subline: (
     <>
