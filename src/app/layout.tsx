@@ -2,6 +2,17 @@ import '@once-ui-system/core/css/styles.css';
 import '@once-ui-system/core/css/tokens.css';
 import '@/resources/custom.css'
 
+if (typeof localStorage !== 'undefined' && typeof localStorage.getItem !== 'function') {
+  global.localStorage = {
+    getItem: () => null,
+    setItem: () => null,
+    removeItem: () => null,
+    clear: () => null,
+    length: 0,
+    key: () => null,
+  } as any;
+}
+
 import classNames from "classnames";
 
 import { Background, Column, Flex, Meta, opacity, SpacingToken } from "@once-ui-system/core";
@@ -45,6 +56,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
+                if (typeof window === 'undefined' || typeof document === 'undefined' || !document.documentElement) return;
                 try {
                   const root = document.documentElement;
                   const defaultTheme = 'system';
@@ -71,27 +83,29 @@ export default async function RootLayout({
                   // Resolve theme
                   const resolveTheme = (themeValue) => {
                     if (!themeValue || themeValue === 'system') {
-                      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                      return (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
                     }
                     return themeValue;
                   };
                   
                   // Apply saved theme
-                  const savedTheme = localStorage.getItem('data-theme');
+                  const savedTheme = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem('data-theme') : null;
                   const resolvedTheme = resolveTheme(savedTheme);
                   root.setAttribute('data-theme', resolvedTheme);
                   
                   // Apply any saved style overrides
                   const styleKeys = Object.keys(config);
                   styleKeys.forEach(key => {
-                    const value = localStorage.getItem('data-' + key);
+                    const value = (typeof localStorage !== 'undefined' && localStorage.getItem) ? localStorage.getItem('data-' + key) : null;
                     if (value) {
                       root.setAttribute('data-' + key, value);
                     }
                   });
                 } catch (e) {
                   console.error('Failed to initialize theme:', e);
-                  document.documentElement.setAttribute('data-theme', 'dark');
+                  if (typeof document !== 'undefined' && document.documentElement) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                  }
                 }
               })();
             `,
