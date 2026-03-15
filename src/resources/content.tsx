@@ -16,7 +16,7 @@ const person: Person = {
 
 const newsletter: Newsletter = {
   display: true,
-  title: <>Subscribe to {person.name}'s Newsletter</>,
+  title: <>Subscribe to {person.name}&apos;s Newsletter</>,
   description: (
     <>
       I occasionally write about science, technology, and share thoughts on the
@@ -68,7 +68,7 @@ const home: Home = {
   },
   subline: (
     <>
-      I'm Saqlain Afroz, an aspiring astrophysicist, skilled in gravitational wave astrophysics, machine learning, and scientific computing. {/*at{" "}*/}
+      I&apos;m Saqlain Afroz, an aspiring astrophysicist, skilled in gravitational wave astrophysics, machine learning, and scientific computing. {/*at{" "}*/}
       {/* <Logo
         icon="/trademarks/wordmark-dark.svg"
         style={{ display: "inline-flex", top: "0.25em", marginLeft: "-0.25em" }}
@@ -156,7 +156,7 @@ const about: About = {
       },
       {
         name: "Inter-University Center for Astronomy and Astrophysics",
-        description: <>Master's Thesis in Gravitational Wave Astrophysics.</>,
+        description: <>Master&apos;s Thesis in Gravitational Wave Astrophysics.</>,
       },
     ],
   },
