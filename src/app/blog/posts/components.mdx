@@ -45,40 +45,27 @@ Tables are used to display data in a structured format.
     radius="none"
     topRadius="l"
     preview={
-    <Table 
-      data={{
-        headers: [
-          { content: "Name", key: "name", sortable: true },
-          { content: "Type", key: "type", sortable: true },
-          { content: "Description", key: "description" }
-        ],
-        rows: [
-          ["title", "string", "The title of the document"],
-          ["summary", "string", "A brief summary of the document content"],
-          ["updatedAt", "string", "The date when the document was last updated"],
-          ["navLabel", "string", "The label used in navigation menus"]
-        ]
-      }}
-    />}
+<>
+
+| Name | Type | Description |
+| :--- | :--- | :--- |
+| title | string | The title of the document |
+| summary | string | A brief summary of the document content |
+| updatedAt | string | The date when the document was last updated |
+| navLabel | string | The label used in navigation menus |
+
+</>
+    }
     codes={[
       {
         code:
-`<Table 
-    data={{
-      headers: [
-        { content: "Name", key: "name", sortable: true },
-        { content: "Type", key: "type", sortable: true },
-        { content: "Description", key: "description" }
-      ],
-      rows: [
-        ["title", "string", "The title of the document"],
-        ["summary", "string", "A brief summary of the document content"],
-        ["updatedAt", "string", "The date when the document was last updated"],
-        ["navLabel", "string", "The label used in navigation menus"]
-      ]
-    }}
-/>`,
-        language: "tsx",
+`| Name | Type | Description |
+| :--- | :--- | :--- |
+| title | string | The title of the document |
+| summary | string | A brief summary of the document content |
+| updatedAt | string | The date when the document was last updated |
+| navLabel | string | The label used in navigation menus |`,
+        language: "markdown",
         label: "Table"
       }
     ]}

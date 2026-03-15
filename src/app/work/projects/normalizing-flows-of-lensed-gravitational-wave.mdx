@@ -35,31 +35,21 @@ To generate the waveforms for the training set, we have used the prior distribut
 
 ## 📋 Prior Distributions Table
 
-
-<Table
-  data={{
-    headers: [
-      { content: "Parameter", key: "parameter", sortable: true },
-      { content: "Distribution Type", key: "distribution_type", sortable: true },
-      { content: "Range / Description", key: "range_description" }
-    ],
-    rows: [
-      ["mass1", "Constraint", "[10, 100]"],
-      ["mass2", "Constraint", "[10, 100]"],
-      ["mass_ratio", "UniformInComponentsMassRatio", "[0.1, 1]"],
-      ["chirp_mass", "UniformInComponentsChirpMass", "[10, 100]"],
-      ["spin1z", "Uniform", "[-0.9, 0.9]"],
-      ["spin2z", "Uniform", "[-0.9, 0.9]"],
-      ["coa_phase", "Uniform", "[0.0, 2π]"],
-      ["SNR", "PowerLaw (α = -4)", "[10, 500]"],
-      ["dec", "Cosine", "[−π/2, π/2]"],
-      ["ra", "Uniform (periodic)", "[0, 2π]"],
-      ["polarization", "Uniform (periodic)", "[0, π]"],
-      ["Log_Mlz", "Uniform", "[2, 5]"],
-      ["yl", "PowerLaw (α = 1)", "[0.01, 1.0]"]
-    ]
-  }}
-/>
+| Parameter | Distribution Type | Range / Description |
+| :--- | :--- | :--- |
+| mass1 | Constraint | [10, 100] |
+| mass2 | Constraint | [10, 100] |
+| mass_ratio | UniformInComponentsMassRatio | [0.1, 1] |
+| chirp_mass | UniformInComponentsChirpMass | [10, 100] |
+| spin1z | Uniform | [-0.9, 0.9] |
+| spin2z | Uniform | [-0.9, 0.9] |
+| coa_phase | Uniform | [0.0, 2π] |
+| SNR | PowerLaw (α = -4) | [10, 500] |
+| dec | Cosine | [−π/2, π/2] |
+| ra | Uniform (periodic) | [0, 2π] |
+| polarization | Uniform (periodic) | [0, π] |
+| Log_Mlz | Uniform | [2, 5] |
+| yl | PowerLaw (α = 1) | [0.01, 1.0] |
 
 ## inference
 

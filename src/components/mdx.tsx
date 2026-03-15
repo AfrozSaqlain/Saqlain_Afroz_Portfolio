@@ -1,5 +1,6 @@
 import { MDXRemote, MDXRemoteProps } from "next-mdx-remote/rsc";
 import React, { ReactNode } from "react";
+import Link from "next/link";
 import { PythonPlayground } from "@/components/PythonPlayground";
 import { JupyterLiteEmbed } from "@/components/JupyterLiteEmbed";
 
@@ -13,7 +14,7 @@ import {
   MediaProps,
   Accordion,
   AccordionGroup,
-  Table,
+  Table as OnceTable,
   Feedback,
   Button,
   Card,
@@ -31,6 +32,7 @@ import { SiLinkedin, SiGithub } from "react-icons/si";
 
 
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css"; // 👈 required for math rendering
 
@@ -40,26 +42,20 @@ type CustomLinkProps = React.AnchorHTMLAttributes<HTMLAnchorElement> & {
 };
 
 function CustomLink({ href, children, ...props }: CustomLinkProps) {
-  if (href.startsWith("/")) {
-    return (
-      <SmartLink href={href} {...props}>
-        {children}
-      </SmartLink>
-    );
-  }
+  const isExternal = href?.startsWith("http") || href?.startsWith("mailto");
 
-  if (href.startsWith("#")) {
+  if (isExternal) {
     return (
-      <a href={href} {...props}>
+      <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
         {children}
       </a>
     );
   }
 
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+    <Link href={href} {...props}>
       {children}
-    </a>
+    </Link>
   );
 }
 
@@ -168,13 +164,34 @@ const components = {
   a: CustomLink as any,
   code: createInlineCode as any,
   pre: createCodeBlock as any,
+  table: (props: any) => {
+    const isLayoutTable = props.style?.border === 'none' || props.border === '0';
+    return (
+      <div style={{ 
+        overflowX: 'auto', 
+        marginBottom: '16px', 
+        border: isLayoutTable ? 'none' : '1px solid var(--neutral-alpha-medium)', 
+        borderRadius: isLayoutTable ? 'none' : '8px' 
+      }}>
+        <table {...props} style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', ...props.style }} />
+      </div>
+    );
+  },
+  thead: (props: any) => (
+    <thead {...props} style={{ backgroundColor: 'var(--neutral-alpha-weak)', borderBottom: '1px solid var(--neutral-alpha-medium)' }} />
+  ),
+  th: (props: any) => (
+    <th {...props} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '600' }} />
+  ),
+  td: (props: any) => (
+    <td {...props} style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-alpha-weak)' }} />
+  ),
   Heading,
   Text,
   CodeBlock,
   InlineCode,
   Accordion,
   AccordionGroup,
-  Table,
   Feedback,
   Button,
   Card,
@@ -205,7 +222,7 @@ export function CustomMDX(props: CustomMDXProps) {
       components={{ ...components, ...(props.components || {}) }}
       options={{
         mdxOptions: {
-          remarkPlugins: [remarkMath], // 👈 math support
+          remarkPlugins: [remarkMath, remarkGfm], // 👈 math and table support
           rehypePlugins: [rehypeKatex],
         },
       }}
