@@ -1,14 +1,14 @@
 ---
-title: "Normalizing Flows in GW astronomy."
-publishedAt: "2025-09-22"
-summary: "Developed a normlaizing flow model to do parameter estimation of lensed gravitational waves."
+title: "IMNN + CNN + Flow Matching for Lensed Gravitational Waves"
+publishedAt: "2026-03-31"
+summary: "A full mathematical derivation of the GWFlows pipeline: CNN-backed IMNN compression, conditional flow matching, ODE sampling, and importance-sampling posterior correction for lensed GW parameter estimation."
 team:
   - name: "Saqlain Afroz"
     role: "Student"
     avatar: "/images/avatar.jpg"
     linkedIn: "https://www.linkedin.com/company/once-ui/"
   - name: "Dr. Apratim Ganguly"
-    role: "Scietific Officer"
+    role: "Scientific Officer"
     avatar: "/images/projects/project-01/apratim.jpg"
     linkedIn: "https://www.linkedin.com/company/once-ui/"
   - name: "Dr. Anuj Mishra"
@@ -17,40 +17,1563 @@ team:
     linkedIn: "https://www.linkedin.com/company/once-ui/"
 link: "https://github.com/AfrozSaqlain/GWFlows"
 ---
-# 🔭 GWFlows Project Overview
 
-Normalizing Flows is a generative model which can be used to generate posterior samples conditioned on a GW signal. Normlaizing Flow works on the principle of change of varibables in statistics. To build a normlaizing flow model we take a sequence of bijective functions, which takes samples from a distribution and maps it to a Standard Normal distribution. Since we want the model to be conditioned on GW signal, we give the signal as an additional context to the model. Suppose $f: \theta \to u$, then the predictedd posterior $q(\theta | d)$ is given by the change of variables formula as:
+# IMNN + CNN + Flow Matching Pipeline
+
+This page rewrites the full mathematics behind the `GWFlows` pipeline used for lensed gravitational-wave parameter estimation. The goal is to learn fast posterior samples for parameters such as masses, spins, sky position, and lensing variables, while keeping the conditioning representation maximally informative about the physics.
+
+The implemented pipeline has four coupled pieces:
+
+1. The waveform-like input $$d$$ is standardized.
+2. A CNN-based Information Maximizing Neural Network (IMNN) compresses the high-dimensional signal into a low-dimensional summary $$s$$.
+3. A conditional flow-matching model learns to transport Gaussian noise into posterior samples of the standardized parameter vector $$\tilde{\theta}$$ conditioned on $$s$$.
+4. Optionally, neural samples are corrected with exact gravitational-wave likelihood reweighting through importance sampling.
+
+In short, the model learns
 
 $$
-  q(\vec{\theta} | d) = \mathcal{N}(0, \mathbf{1}) (f(\theta) | d) \cdot |\text{det } J_{f_d}(\vec{\theta})|
+p(\theta \mid d),
 $$
 
-where $f_d$ represent the FNN neural network part conditioned on the observed data $d$. In the case of parameter estimation of GWs, we define the $\mathcal{N}(0, \mathbf{1})$ to be a multivariate one.
+but it does so by first learning a compressed context and then learning a conditional transport process in parameter space.
 
-This function $f$ can be defined in many different ways, but in this project we have used rational quadratic spline transform, which conditions the $\theta_i$ parameters on $\theta_{< i}$ parameters, as well as on data $d$.
+---
 
-The loss that we minimize is the Kullback-Leibler Divergence of true vs predicted posterior, which is equivalent to log of the predicted probability as given in above equation.
+## 1. Training Data and Standardization
 
-To generate the waveforms for the training set, we have used the prior distribution, as given in table below.
+The training set is a collection of paired examples
 
-## 📋 Prior Distributions Table
+$$
+\{(\theta^{(i)}, d^{(i)})\}_{i=1}^N,
+$$
+
+where:
+
+- $$\theta^{(i)} \in \mathbb{R}^{D_\theta}$$ is the target parameter vector,
+- $$d^{(i)} \in \mathbb{R}^{D_d}$$ is the associated GW data vector.
+
+The code splits the dataset deterministically into:
+
+$$
+\text{train} = 80\%, \qquad \text{validation} = 10\%, \qquad \text{test} = 10\%.
+$$
+
+The model is trained in standardized coordinates. Let the feature-wise means and standard deviations computed from the training set be
+
+$$
+\mu_\theta, \sigma_\theta \in \mathbb{R}^{D_\theta}, \qquad
+\mu_d, \sigma_d \in \mathbb{R}^{D_d}.
+$$
+
+Then the standardized variables are
+
+$$
+\tilde{\theta} = \frac{\theta - \mu_\theta}{\sigma_\theta},
+\qquad
+\tilde{d} = \frac{d - \mu_d}{\sigma_d},
+$$
+
+or, in element-wise notation,
+
+$$
+\tilde{\theta} = (\theta - \mu_\theta) \oslash \sigma_\theta,
+\qquad
+\tilde{d} = (d - \mu_d) \oslash \sigma_d.
+$$
+
+At inference time we invert the scaling by
+
+$$
+\theta = \sigma_\theta \odot \tilde{\theta} + \mu_\theta.
+$$
+
+All neural training happens in standardized space; waveform generation and exact likelihood evaluation happen in physical parameter space.
+
+---
+
+## 2. CNN Backbone Used by the IMNN
+
+The input waveform for a batch of size $$B$$ is reshaped to a one-channel 1D tensor
+
+$$
+X^{(0)} \in \mathbb{R}^{B \times 1 \times L},
+$$
+
+where $$L = D_d$$ is the waveform length.
+
+The CNN encoder applies four 1D convolutional stages with ReLU activations and max pooling:
+
+$$
+X^{(1)} = \operatorname{ReLU}\!\left(\operatorname{Conv1d}_{1 \to 16}(X^{(0)}; k=3,s=2,p=1)\right),
+$$
+
+$$
+X^{(1p)} = \operatorname{MaxPool1d}(X^{(1)}; k=2,s=2),
+$$
+
+$$
+X^{(2)} = \operatorname{ReLU}\!\left(\operatorname{Conv1d}_{16 \to 32}(X^{(1p)}; k=3,s=2,p=1)\right),
+$$
+
+$$
+X^{(2p)} = \operatorname{MaxPool1d}(X^{(2)}; k=2,s=2),
+$$
+
+$$
+X^{(3)} = \operatorname{ReLU}\!\left(\operatorname{Conv1d}_{32 \to 64}(X^{(2p)}; k=3,s=2,p=1)\right),
+$$
+
+$$
+X^{(3p)} = \operatorname{MaxPool1d}(X^{(3)}; k=2,s=2),
+$$
+
+$$
+X^{(4)} = \operatorname{ReLU}\!\left(\operatorname{Conv1d}_{64 \to 128}(X^{(3p)}; k=3,s=2,p=1)\right),
+$$
+
+$$
+X^{(4p)} = \operatorname{MaxPool1d}(X^{(4)}; k=2,s=2).
+$$
+
+For a 1D convolution with kernel $$k=3$$, stride $$s=2$$, and padding $$p=1$$, the output length is
+
+$$
+L_{\text{conv}}
+= \left\lfloor \frac{L + 2p - (k-1) - 1}{s} \right\rfloor + 1
+= \left\lfloor \frac{L+1}{2} \right\rfloor.
+$$
+
+For max pooling with kernel $$2$$ and stride $$2$$,
+
+$$
+L_{\text{pool}} = \left\lfloor \frac{L_{\text{conv}}}{2} \right\rfloor.
+$$
+
+So one conv-plus-pool stage reduces temporal length by roughly a factor of $$4$$, and four such stages reduce the resolution by approximately $$4^4 = 256$$.
+
+After the final pooling layer, the feature map has shape
+
+$$
+X^{(4p)} \in \mathbb{R}^{B \times 128 \times L_4}.
+$$
+
+This is flattened:
+
+$$
+z = \operatorname{vec}(X^{(4p)}) \in \mathbb{R}^{B \times (128L_4)}.
+$$
+
+Then the dense projection head computes
+
+$$
+h = \operatorname{ReLU}(zW_1 + b_1), \qquad W_1 \in \mathbb{R}^{128L_4 \times 256},
+$$
+
+$$
+h' = \operatorname{Dropout}(h; p_{\text{drop}}),
+$$
+
+$$
+s = h'W_2 + b_2, \qquad W_2 \in \mathbb{R}^{256 \times D_s}.
+$$
+
+The final summary vector is therefore
+
+$$
+s = E_\psi(\tilde{d}) \in \mathbb{R}^{D_s},
+$$
+
+where $$E_\psi$$ denotes the CNN-based embedding network and $$D_s$$ is the summary dimension.
+
+---
+
+## 3. The IMNN Objective: Why This Compression Is Physics-Aware
+
+The IMNN is designed to compress the high-dimensional signal $$\tilde{d}$$ into a low-dimensional summary $$s$$ while preserving as much information as possible about the target parameters $$\tilde{\theta}$$.
+
+The information measure used is the Fisher Information Matrix. In general,
+
+$$
+F_{ij}
+=
+\left\langle
+\frac{\partial^2 \ln \mathcal{L}}{\partial \theta_i \partial \theta_j}
+\right\rangle.
+$$
+
+If the summaries are approximately Gaussian with mean $$\mu(\theta)$$ and covariance $$C(\theta)$$, then
+
+$$
+F_{ij}
+=
+\frac{\partial \mu^T}{\partial \theta_i}
+C^{-1}
+\frac{\partial \mu}{\partial \theta_j}
+
++ \frac{1}{2}
+\operatorname{Tr}
+\left(
+C^{-1}\frac{\partial C}{\partial \theta_i}
+C^{-1}\frac{\partial C}{\partial \theta_j}
+\right).
+$$
+
+The implementation uses the first, mean-derivative dominated term as the practical objective. Intuitively:
+
+- summaries should change when parameters change,
+- summaries should be stable against noise realizations,
+- different summary dimensions should encode distinct information.
+
+This is why the encoder is not just a generic feature extractor. It is trained to maximize parameter information.
+
+---
+
+## 4. Batchwise IMNN Statistics
+
+For one minibatch of size $$B$$, define:
+
+- $$\Theta \in \mathbb{R}^{B \times D_\theta}$$ as the matrix of standardized parameters,
+- $$S \in \mathbb{R}^{B \times D_s}$$ as the matrix of CNN summaries.
+
+Let the minibatch means be
+
+$$
+\bar{\tilde{\theta}} \in \mathbb{R}^{D_\theta},
+\qquad
+\bar{s} \in \mathbb{R}^{D_s}.
+$$
+
+Center both matrices:
+
+$$
+\Theta_c = \Theta - \mathbf{1}\bar{\tilde{\theta}}^T,
+\qquad
+S_c = S - \mathbf{1}\bar{s}^T.
+$$
+
+These centered matrices are used to estimate second-order moments.
+
+### 4.1 Summary covariance
+
+The summary covariance is
+
+$$
+\Sigma_s
+=
+\frac{1}{B-1} S_c^T S_c + \epsilon_{\text{cov}} I_{D_s}.
+$$
+
+The small diagonal jitter $$\epsilon_{\text{cov}}$$ makes the matrix positive definite and invertible.
+
+### 4.2 Parameter Gram matrix
+
+The batchwise parameter Gram matrix is
+
+$$
+G_\theta
+=
+\frac{1}{B-1} \Theta_c^T \Theta_c + \lambda_{\text{ridge}} I_{D_\theta}.
+$$
+
+The ridge term ensures invertibility even if the batch is nearly degenerate in parameter space.
+
+### 4.3 Cross-covariance and Jacobian proxy
+
+The cross-covariance between parameters and summaries is
+
+$$
+C_{\theta s}
+=
+\frac{1}{B-1} \Theta_c^T S_c.
+$$
+
+The ideal IMNN would like the Jacobian of the expected summaries with respect to parameters,
+
+$$
+\frac{\partial s}{\partial \tilde{\theta}}.
+$$
+
+Since we only have samples, the implementation uses a linear-regression proxy:
+
+$$
+J = G_\theta^{-1} C_{\theta s} \in \mathbb{R}^{D_\theta \times D_s}.
+$$
+
+This is the solution of the normal equations for the best linear prediction of summaries from parameters. If a parameter direction barely affects the summaries, the corresponding entries of $$J$$ will be small.
+
+Define
+
+$$
+M = J^T \in \mathbb{R}^{D_s \times D_\theta}.
+$$
+
+### 4.4 Approximate Fisher matrix used in training
+
+The approximate Fisher matrix is then
+
+$$
+F = M^T \Sigma_s^{-1} M + \epsilon_F I_{D_\theta}.
+$$
+
+This has the right interpretation:
+
+- $$M$$ measures sensitivity of summaries to parameters,
+- $$\Sigma_s^{-1}$$ whitens and penalizes noisy or redundant summaries,
+- $$\epsilon_F$$ keeps $$F$$ numerically stable.
+
+Because of the Cramer-Rao bound,
+
+$$
+\operatorname{Var}(\tilde{\theta}) \ge F^{-1},
+$$
+
+maximizing $$F$$ shrinks the best achievable parameter uncertainty after compression.
+
+---
+
+## 5. Full IMNN Loss Derivation
+
+The IMNN auxiliary objective has three terms.
+
+### 5.1 Information maximization term
+
+We want a large Fisher matrix, so we maximize $$\log \det F$$. Equivalently, we minimize
+
+$$
+\mathcal{I} = - \log \det F.
+$$
+
+This penalizes large posterior uncertainty volume in parameter space.
+
+### 5.2 Covariance whitening penalty
+
+To stop the summaries from becoming arbitrarily scaled or highly correlated, the implementation penalizes deviation from identity covariance:
+
+$$
+\mathcal{C}
+=
+\frac{1}{D_s^2}\|\Sigma_s - I_{D_s}\|_F^2.
+$$
+
+This encourages unit variance and decorrelation across summary dimensions.
+
+### 5.3 Zero-mean penalty
+
+To keep the summaries centered, the implementation uses
+
+$$
+\mathcal{M}
+=
+\frac{1}{D_s}\|\bar{s}\|_2^2.
+$$
+
+This suppresses large constant offsets.
+
+### 5.4 Final IMNN auxiliary loss
+
+Combining the terms with scalar weights gives
+
+$$
+\mathcal{L}_{\text{IMNN}}
+=
+-\lambda_I \log \det F
++ \lambda_C \mathcal{C}
++ \lambda_M \mathcal{M}.
+$$
+
+Expanded fully:
+
+$$
+\mathcal{L}_{\text{IMNN}}
+=
+-\lambda_I \log \det\!\left(M^T \Sigma_s^{-1} M + \epsilon_F I\right)
++ \lambda_C \frac{1}{D_s^2}\|\Sigma_s - I\|_F^2
++ \lambda_M \frac{1}{D_s}\|\bar{s}\|_2^2.
+$$
+
+The encoder is therefore forced to produce summaries that are:
+
+1. sensitive to parameter changes,
+2. robust to noise,
+3. decorrelated,
+4. centered,
+5. numerically well-conditioned for downstream inference.
+
+The learned summary is used directly as the context:
+
+$$
+c = s = E_\psi(\tilde{d}).
+$$
+
+---
+
+## 6. Conditional Posterior Learning Problem
+
+Once the summary vector $$c$$ is produced, the goal becomes learning the conditional posterior
+
+$$
+p_\phi(\tilde{\theta} \mid c).
+$$
+
+In the implemented pipeline, the model does not learn this posterior through an explicit tractable flow likelihood. Instead, it learns a time-dependent vector field whose ODE transports a simple Gaussian base distribution into the posterior distribution.
+
+This is conditional flow matching.
+
+---
+
+## 7. Flow Matching Setup
+
+### 7.1 Base distribution
+
+For each context $$c$$, sampling starts from
+
+$$
+x_0 \sim \mathcal{N}(0, I_{D_\theta}).
+$$
+
+### 7.2 Target endpoint
+
+The endpoint of the transport is the standardized parameter vector:
+
+$$
+x_1 = \tilde{\theta}.
+$$
+
+### 7.3 Interpolation path
+
+The implementation uses the straight-line path
+
+$$
+x_t = (1-t)x_0 + tx_1,
+\qquad t \in [0,1].
+$$
+
+Differentiating with respect to time:
+
+$$
+\frac{d x_t}{dt}
+=
+\frac{d}{dt}\big((1-t)x_0 + tx_1\big)
+=
+-x_0 + x_1
+=
+x_1 - x_0.
+$$
+
+So the true path velocity is constant along the path:
+
+$$
+u_t = x_1 - x_0.
+$$
+
+This is the supervised target used to train the vector field.
+
+---
+
+## 8. Time Sampling and Weighting
+
+Training exactly at $$t=0$$ and $$t=1$$ is often numerically awkward, so the implementation uses a clipped Beta-distributed time variable.
+
+First sample
+
+$$
+\tau \sim \operatorname{Beta}(\alpha,\beta),
+$$
+
+then map it to
+
+$$
+t = t_{\min} + (t_{\max} - t_{\min})\tau.
+$$
+
+This means:
+
+- when $$\alpha = \beta = 1$$, sampling is uniform over the clipped interval,
+- otherwise the training emphasis can be shifted toward early or late times.
+
+The code can additionally weight the loss by
+
+$$
+\omega(t) = \lambda_w \max(t(1-t), 10^{-3})^{-\gamma},
+$$
+
+where $$\gamma = \text{loss_weight_exponent}$$ and $$\lambda_w = \text{loss_weight_scale}$$.
+
+The weights are normalized within a batch:
+
+$$
+\bar{\omega}(t_i)
+=
+\frac{\omega(t_i)}{\frac{1}{B}\sum_{j=1}^B \omega(t_j)}.
+$$
+
+When $$\gamma > 0$$, the endpoints get more weight, which is useful because transport tends to be harder there.
+
+---
+
+## 9. Neural Parameterization of the Velocity Field
+
+The model learns a conditional vector field
+
+$$
+v_\phi(x_t, t, c) \in \mathbb{R}^{D_\theta}.
+$$
+
+Time is embedded through a sinusoidal embedding. For embedding frequencies $$\omega_k$$,
+
+$$
+\gamma(t)
+=
+\big[
+\sin(\omega_1 t), \dots, \sin(\omega_K t),
+\cos(\omega_1 t), \dots, \cos(\omega_K t)
+\big].
+$$
+
+The vector field input is the concatenation
+
+$$
+h_{\text{in}} = [x_t; c; \gamma(t)].
+$$
+
+The implemented residual MLP begins with
+
+$$
+h_0 = W_{\text{in}} h_{\text{in}} + b_{\text{in}},
+$$
+
+$$
+h_0 \leftarrow \operatorname{SiLU}(h_0).
+$$
+
+Each residual block applies
+
+$$
+z = \operatorname{LayerNorm}(h),
+$$
+
+$$
+z = W_2 \, \operatorname{Dropout}(\operatorname{SiLU}(W_1 z + b_1)) + b_2,
+$$
+
+$$
+h_{\text{out}} = h + z.
+$$
+
+After several such blocks, the final velocity prediction is
+
+$$
+v_\phi(x_t, t, c)
+=
+W_{\text{out}} \, \operatorname{SiLU}(\operatorname{LayerNorm}(h_{\text{final}})) + b_{\text{out}}.
+$$
+
+The residual architecture is used because the conditional posterior can be highly non-Gaussian and multimodal once lensing parameters are included.
+
+---
+
+## 10. Flow-Matching Loss: Full Derivation
+
+For one training example:
+
+1. sample $$x_0 \sim \mathcal{N}(0, I)$$,
+2. use $$x_1 = \tilde{\theta}$$,
+3. sample $$t$$,
+4. construct $$x_t = (1-t)x_0 + tx_1$$,
+5. define target velocity $$u_t = x_1 - x_0$$,
+6. predict $$\hat{u}_t = v_\phi(x_t, t, c)$$.
+
+The pointwise squared error is
+
+$$
+\|\hat{u}_t - u_t\|_2^2
+=
+\|v_\phi(x_t, t, c) - (x_1 - x_0)\|_2^2.
+$$
+
+For a batch of size $$B$$, the implemented weighted loss is
+
+$$
+\mathcal{L}_{\text{FM}}
+=
+\frac{1}{B}
+\sum_{i=1}^B
+\bar{\omega}(t_i)
+\left\|
+v_\phi(x_t^{(i)}, t_i, c^{(i)})
+- (x_1^{(i)} - x_0^{(i)})
+\right\|_2^2.
+$$
+
+Since $$x_1 = \tilde{\theta}$$, this can also be written as
+
+$$
+\mathcal{L}_{\text{FM}}
+=
+\frac{1}{B}
+\sum_{i=1}^B
+\bar{\omega}(t_i)
+\left\|
+v_\phi(x_t^{(i)}, t_i, s^{(i)})
+- (\tilde{\theta}^{(i)} - x_0^{(i)})
+\right\|_2^2.
+$$
+
+This is the main posterior-learning objective.
+
+---
+
+## 11. Joint IMNN + Flow-Matching Training Objective
+
+The total loss is the sum of the transport loss and the IMNN auxiliary loss:
+
+$$
+\mathcal{L}_{\text{total}}
+=
+\mathcal{L}_{\text{FM}} + \lambda_{\text{aux}} \mathcal{L}_{\text{IMNN}},
+$$
+
+where $$\lambda_{\text{aux}}$$ is the embedding auxiliary-loss weight.
+
+Expanding it:
+
+$$
+\mathcal{L}_{\text{total}}
+=
+\mathcal{L}_{\text{FM}}
++ \lambda_{\text{aux}}
+\left[
+-\lambda_I \log \det F
++ \lambda_C \frac{1}{D_s^2}\|\Sigma_s - I\|_F^2
++ \lambda_M \frac{1}{D_s}\|\bar{s}\|_2^2
+\right].
+$$
+
+This creates two gradient paths:
+
+### 11.1 Flow path
+
+$$
+\tilde{d} \xrightarrow{E_\psi} s \xrightarrow{v_\phi} \mathcal{L}_{\text{FM}}.
+$$
+
+### 11.2 IMNN path
+
+$$
+\tilde{d} \xrightarrow{E_\psi} s \xrightarrow{\text{covariance / Jacobian / Fisher}} \mathcal{L}_{\text{IMNN}}.
+$$
+
+Hence:
+
+$$
+\nabla_\psi \mathcal{L}_{\text{total}}
+=
+\nabla_\psi \mathcal{L}_{\text{FM}}
++ \lambda_{\text{aux}} \nabla_\psi \mathcal{L}_{\text{IMNN}},
+$$
+
+while
+
+$$
+\nabla_\phi \mathcal{L}_{\text{total}}
+=
+\nabla_\phi \mathcal{L}_{\text{FM}}.
+$$
+
+So the encoder is trained both to preserve information and to support generative posterior transport, while the vector field is trained only to perform the transport.
+
+---
+
+## 12. ODE Interpretation and Posterior Sampling
+
+After training, for a fixed context $$c$$, the learned vector field defines the ODE
+
+$$
+\frac{dx(t)}{dt} = v_\phi(x(t), t, c),
+\qquad
+x(0) \sim \mathcal{N}(0, I).
+$$
+
+Integrating from $$t=0$$ to $$t=1$$ transports Gaussian samples into approximate posterior samples:
+
+$$
+x(1) \sim p_\phi(\tilde{\theta} \mid c).
+$$
+
+For an observed event $$d_{\text{obs}}$$, the inference steps are:
+
+1. standardize the data: $$d_{\text{obs}} \mapsto \tilde{d}_{\text{obs}}$$,
+2. compute the summary:
+
+$$
+c = E_\psi(\tilde{d}_{\text{obs}}),
+$$
+
+3. sample $$M$$ Gaussian initial conditions:
+
+$$
+x_0^{(m)} \sim \mathcal{N}(0, I), \qquad m=1,\dots,M,
+$$
+
+4. solve the ODE for each initial state,
+5. take the final states as samples in standardized parameter space,
+6. map them back to physical units:
+
+$$
+\theta^{(m)} = \sigma_\theta \odot \tilde{\theta}^{(m)} + \mu_\theta.
+$$
+
+This yields neural posterior samples for the lensed GW event.
+
+---
+
+## 13. Numerical Solvers Used for the Transport ODE
+
+The code supports several ODE solvers.
+
+### 13.1 Euler
+
+$$
+x_{n+1} = x_n + \Delta t \, v_\phi(x_n, t_n, c).
+$$
+
+This is first order and cheap, but usually too diffusive.
+
+### 13.2 Heun
+
+$$
+k_1 = v_\phi(x_n, t_n, c),
+$$
+
+$$
+\tilde{x}_{n+1} = x_n + \Delta t\, k_1,
+$$
+
+$$
+k_2 = v_\phi(\tilde{x}_{n+1}, t_n + \Delta t, c),
+$$
+
+$$
+x_{n+1} = x_n + \frac{\Delta t}{2}(k_1 + k_2).
+$$
+
+This is second order and is the default upgraded solver.
+
+### 13.3 Classical RK4
+
+$$
+k_1 = v_\phi(x_n, t_n, c),
+$$
+
+$$
+k_2 = v_\phi\!\left(x_n + \frac{\Delta t}{2}k_1, t_n + \frac{\Delta t}{2}, c\right),
+$$
+
+$$
+k_3 = v_\phi\!\left(x_n + \frac{\Delta t}{2}k_2, t_n + \frac{\Delta t}{2}, c\right),
+$$
+
+$$
+k_4 = v_\phi(x_n + \Delta t\, k_3, t_n + \Delta t, c),
+$$
+
+$$
+x_{n+1}
+=
+x_n + \frac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4).
+$$
+
+This is more accurate but requires more network evaluations.
+
+---
+
+## 14. EMA Weights for Better Sampling
+
+The implementation tracks exponential moving averages of both the encoder and the vector-field parameters.
+
+For any parameter tensor $$w$$ and its EMA copy $$w_{\text{ema}}$$,
+
+$$
+w_{\text{ema}} \leftarrow \rho w_{\text{ema}} + (1-\rho)w,
+$$
+
+where $$\rho = \text{ema_decay}$$.
+
+EMA weights are preferred at sampling time because they reduce optimization noise and usually produce cleaner posterior samples.
+
+---
+
+## 15. Importance Sampling: Why It Is Needed
+
+The neural posterior is fast, but it is still an approximation:
+
+$$
+q(\theta \mid d).
+$$
+
+The exact Bayesian posterior is
+
+$$
+p(\theta \mid d)
+=
+\frac{p(d \mid \theta)p(\theta)}{p(d)}.
+$$
+
+Importance sampling uses the neural posterior as a proposal and corrects it using the exact likelihood and prior.
+
+Suppose we want the posterior expectation of some test function $$f(\theta)$$:
+
+$$
+\mathbb{E}_{p(\theta \mid d)}[f(\theta)]
+=
+\int f(\theta) p(\theta \mid d)\, d\theta.
+$$
+
+Substitute Bayes' theorem:
+
+$$
+\mathbb{E}_{p(\theta \mid d)}[f(\theta)]
+=
+\int
+f(\theta)\frac{p(d \mid \theta)p(\theta)}{p(d)}\, d\theta.
+$$
+
+Now multiply and divide by the proposal $$q(\theta \mid d)$$:
+
+$$
+\mathbb{E}_{p(\theta \mid d)}[f(\theta)]
+=
+\frac{1}{p(d)}
+\int
+f(\theta)
+\frac{p(d \mid \theta)p(\theta)}{q(\theta \mid d)}
+q(\theta \mid d)\, d\theta.
+$$
+
+So this becomes an expectation under the proposal:
+
+$$
+\mathbb{E}_{p(\theta \mid d)}[f(\theta)]
+=
+\frac{1}{p(d)}
+\mathbb{E}_{q(\theta \mid d)}
+\left[
+f(\theta)\tilde{w}(\theta)
+\right],
+$$
+
+with unnormalized weight
+
+$$
+\tilde{w}(\theta)
+=
+\frac{p(d \mid \theta)p(\theta)}{q(\theta \mid d)}.
+$$
+
+If $$\theta^{(1)}, \dots, \theta^{(N)} \sim q(\theta \mid d)$$, then the self-normalized importance-sampling estimator is
+
+$$
+\mathbb{E}_{p(\theta \mid d)}[f(\theta)]
+\approx
+\sum_{i=1}^N \bar{w}_i f(\theta^{(i)}),
+$$
+
+where
+
+$$
+\bar{w}_i = \frac{\tilde{w}_i}{\sum_{j=1}^N \tilde{w}_j}.
+$$
+
+In log space the code computes
+
+$$
+\log \tilde{w}_i
+=
+\log p(d \mid \theta^{(i)})
++ \log p(\theta^{(i)})
+- \log q(\theta^{(i)} \mid d).
+$$
+
+For numerical stability, let
+
+$$
+m = \max_i \log \tilde{w}_i.
+$$
+
+Then define
+
+$$
+u_i = \exp(\log \tilde{w}_i - m),
+\qquad
+\bar{w}_i = \frac{u_i}{\sum_j u_j}.
+$$
+
+Subtracting the maximum does not change the normalized weights because it multiplies numerator and denominator by the same constant $$e^{-m}$$.
+
+---
+
+## 16. Exact GW Likelihood Used in Reweighting
+
+For a candidate parameter vector $$\theta$$, the detector data model is
+
+$$
+d(t) = h(t;\theta) + n(t),
+$$
+
+where $$h(t;\theta)$$ is the deterministic waveform template and $$n(t)$$ is stationary Gaussian noise with known PSD.
+
+Define the residual
+
+$$
+r(t;\theta) = d(t) - h(t;\theta).
+$$
+
+Under Gaussian noise,
+
+$$
+p(d \mid \theta)
+\propto
+\exp\left(-\frac{1}{2}\langle r, r \rangle\right),
+$$
+
+where $$\langle \cdot, \cdot \rangle$$ is the PSD-weighted inner product.
+
+Starting from the Gaussian density for the noise realization,
+
+$$
+p(n) \propto \exp\left(-\frac{1}{2}\langle n,n\rangle\right),
+$$
+
+and using $$n = d - h(\theta)$$, we get
+
+$$
+p(d \mid \theta)
+\propto
+\exp\left(-\frac{1}{2}\langle d-h(\theta), d-h(\theta)\rangle\right).
+$$
+
+Taking logs:
+
+$$
+\log p(d \mid \theta)
+=
+-\frac{1}{2}\langle d-h(\theta), d-h(\theta)\rangle + C.
+$$
+
+Since the constant $$C$$ is parameter-independent, it cancels in importance weights, so the code uses
+
+$$
+\log p(d \mid \theta)
+=
+-\frac{1}{2}\langle r,r\rangle.
+$$
+
+In the frequency domain this inner product is
+
+$$
+\langle r,r\rangle
+=
+4\,\Re \int_{f_{\text{low}}}^{\infty}
+\frac{\tilde{r}(f)\tilde{r}^*(f)}{S_n(f)}\, df.
+$$
+
+Numerically this is evaluated on the waveform's actual frequency grid. The PSD must match the waveform length and frequency spacing, otherwise the discrete inner product is inconsistent.
+
+---
+
+## 17. Prior Evaluation and Why the Full Joint Prior Matters
+
+The code evaluates the full Bilby prior in physical parameter space:
+
+$$
+\log p(\theta).
+$$
+
+This matters because GW priors are not always simple independent products. If the prior factorized perfectly, we would have
+
+$$
+p(\theta) = p(\theta_a)p(\theta_b),
+$$
+
+and therefore
+
+$$
+\log p(\theta) = \log p(\theta_a) + \log p(\theta_b).
+$$
+
+But realistic compact-binary priors often include joint constraints, which can be represented as
+
+$$
+p(\theta) = p_{\text{raw}}(\theta)\,\mathbf{1}_{\mathcal{C}}(\theta),
+$$
+
+where $$\mathbf{1}_{\mathcal{C}}(\theta)$$ is an indicator for the allowed region.
+
+Then
+
+$$
+\log p(\theta)
+=
+\log p_{\text{raw}}(\theta) + \log \mathbf{1}_{\mathcal{C}}(\theta).
+$$
+
+Outside the allowed region,
+
+$$
+\mathbf{1}_{\mathcal{C}}(\theta)=0
+\quad \Rightarrow \quad
+\log p(\theta) = -\infty.
+$$
+
+This cannot be captured by summing only a few marginal priors. So the full prior object must be used.
+
+---
+
+## 18. Proposal Density in Physical and Standardized Coordinates
+
+The neural model lives in standardized coordinates, so it naturally represents
+
+$$
+q_{\tilde{\theta}}(\tilde{\theta} \mid d).
+$$
+
+Importance sampling, however, needs the proposal density in physical coordinates:
+
+$$
+q_\theta(\theta \mid d).
+$$
+
+The affine map is
+
+$$
+\tilde{\theta} = T(\theta) = \operatorname{diag}(\sigma_\theta^{-1})(\theta - \mu_\theta).
+$$
+
+By the change-of-variables formula,
+
+$$
+q_\theta(\theta \mid d)
+=
+q_{\tilde{\theta}}(\tilde{\theta} \mid d)
+\left|
+\det \frac{\partial \tilde{\theta}}{\partial \theta}
+\right|.
+$$
+
+Since the Jacobian is diagonal,
+
+$$
+\frac{\partial \tilde{\theta}}{\partial \theta}
+=
+\operatorname{diag}(\sigma_\theta^{-1}),
+$$
+
+so
+
+$$
+\left|
+\det \frac{\partial \tilde{\theta}}{\partial \theta}
+\right|
+=
+\prod_{k=1}^{D_\theta} \frac{1}{\sigma_{\theta,k}}.
+$$
+
+Taking logs:
+
+$$
+\log q_\theta(\theta \mid d)
+=
+\log q_{\tilde{\theta}}(\tilde{\theta} \mid d)
+- \sum_{k=1}^{D_\theta}\log \sigma_{\theta,k}.
+$$
+
+This Jacobian correction is explicitly required in the reweighting code.
+
+---
+
+## 19. Why Flow Matching Does Not Have an Immediate Log Probability
+
+For tractable normalizing flows such as MAF or NSF, the model directly exposes
+
+$$
+\log q_{\tilde{\theta}}(\tilde{\theta} \mid c).
+$$
+
+Flow matching is different. It gives a sampler through an ODE, not an explicit density formula. So if we want proposal log densities for importance sampling, we must recover them from density evolution under the learned flow.
+
+This is the continuous-normalizing-flow part of the mathematics.
+
+---
+
+## 20. Density Evolution for Flow Matching
+
+Let $$\rho_t(x)$$ be the density transported by the vector field $$v(x,t,c)$$. It obeys the continuity equation
+
+$$
+\partial_t \rho_t(x) + \nabla_x \cdot \big(\rho_t(x)\, v(x,t,c)\big) = 0.
+$$
+
+Apply the product rule:
+
+$$
+\nabla_x \cdot (\rho_t v)
+=
+v \cdot \nabla_x \rho_t + \rho_t \nabla_x \cdot v.
+$$
+
+So the continuity equation becomes
+
+$$
+\partial_t \rho_t + v \cdot \nabla_x \rho_t + \rho_t \nabla_x \cdot v = 0.
+$$
+
+Now write
+
+$$
+\rho_t = e^{\ell_t},
+\qquad
+\ell_t = \log \rho_t.
+$$
+
+Then
+
+$$
+\partial_t \rho_t = \rho_t \partial_t \ell_t,
+\qquad
+\nabla_x \rho_t = \rho_t \nabla_x \ell_t.
+$$
+
+Substitute these into the continuity equation:
+
+$$
+\rho_t \partial_t \ell_t
++ v \cdot \rho_t \nabla_x \ell_t
++ \rho_t \nabla_x \cdot v
+= 0.
+$$
+
+Factor out $$\rho_t$$:
+
+$$
+\rho_t
+\left(
+\partial_t \ell_t
++ v \cdot \nabla_x \ell_t
++ \nabla_x \cdot v
+\right)
+= 0.
+$$
+
+Assuming $$\rho_t > 0$$, we get
+
+$$
+\partial_t \ell_t + v \cdot \nabla_x \ell_t = - \nabla_x \cdot v.
+$$
+
+Along a characteristic trajectory $$x(t)$$ satisfying
+
+$$
+\frac{dx}{dt} = v(x,t,c),
+$$
+
+the chain rule gives
+
+$$
+\frac{d}{dt}\ell_t(x(t))
+=
+\partial_t \ell_t + \frac{dx}{dt} \cdot \nabla_x \ell_t
+=
+\partial_t \ell_t + v \cdot \nabla_x \ell_t.
+$$
+
+Therefore
+
+$$
+\frac{d}{dt}\log \rho_t(x(t))
+=
+- \nabla_x \cdot v(x(t), t, c).
+$$
+
+Integrate from $$t=0$$ to $$t=1$$:
+
+$$
+\log \rho_1(x(1)) - \log \rho_0(x(0))
+=
+- \int_0^1 \nabla_x \cdot v(x(t), t, c)\, dt.
+$$
+
+Hence
+
+$$
+\log \rho_1(x(1))
+=
+\log \rho_0(x(0))
+- \int_0^1 \nabla_x \cdot v(x(t), t, c)\, dt.
+$$
+
+Since the base density is Gaussian, this becomes the proposal density formula for flow matching.
+
+---
+
+## 21. Reverse-Time Proposal Density for Flow Matching
+
+At importance-sampling time, we are given a target point $$x_1 = \tilde{\theta}$$ and want its proposal density. So the code integrates backward from the target to the base:
+
+$$
+x_1 \mapsto x_0.
+$$
+
+The standardized-space proposal density is then
+
+$$
+\log q_{\tilde{\theta}}(\tilde{\theta} \mid c)
+=
+\log \mathcal{N}(x_0;0,I)
+- \int_0^1 \nabla_x \cdot v(x(t), t, c)\, dt.
+$$
+
+For dimension $$D_\theta$$, the Gaussian base density is
+
+$$
+\mathcal{N}(x_0;0,I)
+=
+\frac{1}{(2\pi)^{D_\theta/2}}
+\exp\left(-\frac{1}{2}\|x_0\|_2^2\right),
+$$
+
+so
+
+$$
+\log \mathcal{N}(x_0;0,I)
+=
+-\frac{D_\theta}{2}\log(2\pi) - \frac{1}{2}\|x_0\|_2^2.
+$$
+
+The divergence is computed exactly by automatic differentiation:
+
+$$
+\nabla_x \cdot v
+=
+\sum_{k=1}^{D_\theta}\frac{\partial v_k}{\partial x_k}.
+$$
+
+The reverse numerical integration used in the code is Euler-like:
+
+$$
+x_{n-1} = x_n - \Delta t\, v(x_n, t_n, c),
+$$
+
+$$
+a_n = a_{n+1} + \Delta t\, \nabla_x \cdot v(x_n, t_n, c),
+$$
+
+where $$a_n$$ accumulates the divergence integral. After stepping back to $$t \approx 0$$, the code evaluates
+
+$$
+\log q_{\tilde{\theta}}(\tilde{\theta} \mid c)
+=
+\log \mathcal{N}(x_0;0,I) - a_0.
+$$
+
+Because the model was trained only on a clipped interval $$[t_{\min}, t_{\max}]$$, the reverse-density evaluation also clamps the times to that interval.
+
+This is mathematically correct in form, but slower than tractable normalizing flows because each density evaluation requires:
+
+1. reverse ODE integration,
+2. repeated vector-field evaluations,
+3. repeated divergence evaluations.
+
+---
+
+## 22. Full Importance-Weight Formula Used by the Pipeline
+
+Putting all pieces together, for each proposal sample $$\theta^{(i)}$$ the code computes
+
+$$
+\log \tilde{w}_i
+=
+\log p(d \mid \theta^{(i)})
++ \log p(\theta^{(i)})
+- \log q_\theta(\theta^{(i)} \mid d).
+$$
+
+Then:
+
+$$
+\bar{w}_i
+=
+\frac{\exp(\log \tilde{w}_i - m)}
+{\sum_j \exp(\log \tilde{w}_j - m)},
+\qquad
+m = \max_j \log \tilde{w}_j.
+$$
+
+The effective sample size is
+
+$$
+N_{\text{eff}} = \frac{1}{\sum_i \bar{w}_i^2}.
+$$
+
+This can be derived from the standard unnormalized formula
+
+$$
+N_{\text{eff}}
+=
+\frac{\left(\sum_i \tilde{w}_i\right)^2}{\sum_i \tilde{w}_i^2},
+$$
+
+because with
+
+$$
+\bar{w}_i = \frac{\tilde{w}_i}{\sum_j \tilde{w}_j},
+$$
+
+we have
+
+$$
+\sum_i \bar{w}_i^2
+=
+\frac{\sum_i \tilde{w}_i^2}{\left(\sum_j \tilde{w}_j\right)^2},
+$$
+
+and therefore
+
+$$
+\frac{1}{\sum_i \bar{w}_i^2}
+=
+\frac{\left(\sum_j \tilde{w}_j\right)^2}{\sum_i \tilde{w}_i^2}.
+$$
+
+The sample efficiency is
+
+$$
+\epsilon = \frac{N_{\text{eff}}}{N}.
+$$
+
+The evidence estimator is
+
+$$
+\hat{p}(d) = \frac{1}{N}\sum_{i=1}^N \tilde{w}_i,
+$$
+
+and in log form
+
+$$
+\log \hat{p}(d)
+=
+\log\left(\sum_{i=1}^N e^{\log \tilde{w}_i}\right) - \log N.
+$$
+
+---
+
+## 23. Why Weighted Resampling Gives Corrected Posterior Samples
+
+The weighted empirical measure is
+
+$$
+\hat{\pi}_N(d\theta)
+=
+\sum_{i=1}^N \bar{w}_i \, \delta_{\theta^{(i)}}(d\theta).
+$$
+
+If we draw indices $$I_1,\dots,I_M$$ independently with
+
+$$
+\Pr(I_m = i) = \bar{w}_i,
+$$
+
+and define
+
+$$
+\hat{\theta}^{(m)} = \theta^{(I_m)},
+$$
+
+then the resampled cloud is distributed according to the weighted empirical approximation of the corrected posterior.
+
+This is why the pipeline can turn weighted samples into ordinary posterior sample sets for corner plots and downstream summaries.
+
+---
+
+## 24. End-to-End Mathematical Pipeline
+
+The full implemented method can be summarized compactly as follows.
+
+### 24.1 Compression
+
+$$
+s = E_\psi(\tilde{d}), \qquad c=s.
+$$
+
+### 24.2 IMNN objective
+
+$$
+\Sigma_s
+=
+\frac{1}{B-1}S_c^T S_c + \epsilon_{\text{cov}}I,
+$$
+
+$$
+G_\theta
+=
+\frac{1}{B-1}\Theta_c^T \Theta_c + \lambda_{\text{ridge}}I,
+$$
+
+$$
+J = G_\theta^{-1} C_{\theta s},
+\qquad
+F = J \Sigma_s^{-1} J^T + \epsilon_F I,
+$$
+
+$$
+\mathcal{L}_{\text{IMNN}}
+=
+-\lambda_I \log \det F
++ \lambda_C \frac{1}{D_s^2}\|\Sigma_s - I\|_F^2
++ \lambda_M \frac{1}{D_s}\|\bar{s}\|_2^2.
+$$
+
+### 24.3 Flow matching
+
+$$
+x_0 \sim \mathcal{N}(0,I),
+\qquad
+x_1 = \tilde{\theta},
+\qquad
+x_t = (1-t)x_0 + tx_1,
+$$
+
+$$
+u_t = x_1 - x_0,
+\qquad
+\hat{u}_t = v_\phi(x_t, t, s).
+$$
+
+$$
+\mathcal{L}_{\text{FM}}
+=
+\frac{1}{B}\sum_{i=1}^B
+\bar{\omega}(t_i)
+\left\|
+v_\phi(x_t^{(i)}, t_i, s^{(i)})
+- (\tilde{\theta}^{(i)} - x_0^{(i)})
+\right\|_2^2.
+$$
+
+### 24.4 Joint training
+
+$$
+\mathcal{L}_{\text{total}}
+=
+\mathcal{L}_{\text{FM}} + \lambda_{\text{aux}} \mathcal{L}_{\text{IMNN}}.
+$$
+
+### 24.5 Sampling
+
+$$
+\frac{dx}{dt} = v_\phi(x,t,E_\psi(\tilde{d}_{\text{obs}})),
+\qquad
+x(0) \sim \mathcal{N}(0,I),
+$$
+
+$$
+x(1) \approx \tilde{\theta} \sim p(\tilde{\theta}\mid \tilde{d}_{\text{obs}}).
+$$
+
+### 24.6 Optional posterior correction
+
+$$
+\log \tilde{w}_i
+=
+\log p(d\mid \theta^{(i)})
++ \log p(\theta^{(i)})
+- \log q_\theta(\theta^{(i)}\mid d),
+$$
+
+$$
+\bar{w}_i \propto \exp(\log \tilde{w}_i),
+$$
+
+followed by weighted resampling.
+
+---
+
+## 25. Interpretation for Lensed GW Parameter Estimation
+
+This pipeline is useful because lensed GW signals are high-dimensional, noisy, and parameter-rich.
+
+The CNN alone would only be a feature extractor. The IMNN makes that feature extractor physically meaningful by forcing it to preserve parameter information. The flow-matching model then uses those information-rich summaries as the only context needed to generate posterior samples. Finally, importance sampling corrects any mismatch between the learned posterior and the exact Bayesian posterior defined by the GW likelihood and prior.
+
+Conceptually:
+
+1. the CNN says which latent features of the waveform matter,
+2. the IMNN says those features must remain maximally informative about $$\theta$$,
+3. the flow-matching ODE says how to transport Gaussian noise into the posterior,
+4. importance sampling says how to make the final sample set more exact.
+
+So the full system is not just a neural posterior sampler. It is a compressed, information-aware, transport-based Bayesian inference pipeline for lensed gravitational waves.
+
+---
+
+## 26. Prior Used for Waveform Generation
+
+The training data is generated from the following prior family:
 
 | Parameter | Distribution Type | Range / Description |
 | :--- | :--- | :--- |
-| mass1 | Constraint | [10, 100] |
-| mass2 | Constraint | [10, 100] |
-| mass_ratio | UniformInComponentsMassRatio | [0.1, 1] |
-| chirp_mass | UniformInComponentsChirpMass | [10, 100] |
-| spin1z | Uniform | [-0.9, 0.9] |
-| spin2z | Uniform | [-0.9, 0.9] |
-| coa_phase | Uniform | [0.0, 2π] |
-| SNR | PowerLaw (α = -4) | [10, 500] |
-| dec | Cosine | [−π/2, π/2] |
-| ra | Uniform (periodic) | [0, 2π] |
-| polarization | Uniform (periodic) | [0, π] |
-| Log_Mlz | Uniform | [2, 5] |
-| yl | PowerLaw (α = 1) | [0.01, 1.0] |
+| $$mass1$$ | Constraint | $$[10, 100]$$ |
+| $$mass2$$ | Constraint | $$[10, 100]$$ |
+| $$mass\_ratio$$ | UniformInComponentsMassRatio | $$[0.1, 1]$$ |
+| $$chirp\_mass$$ | UniformInComponentsChirpMass | $$[10, 100]$$ |
+| $$spin1z$$ | Uniform | $$[-0.9, 0.9]$$ |
+| $$spin2z$$ | Uniform | $$[-0.9, 0.9]$$ |
+| $$coa\_phase$$ | Uniform | $$[0, 2\pi]$$ |
+| $$SNR$$ | PowerLaw $$({\alpha=-4})$$ | $$[10, 500]$$ |
+| $$dec$$ | Cosine | $$[-\pi/2, \pi/2]$$ |
+| $$ra$$ | Uniform (periodic) | $$[0, 2\pi]$$ |
+| $$polarization$$ | Uniform (periodic) | $$[0, \pi]$$ |
+| $$Log\_Mlz$$ | Uniform | $$[2, 5]$$ |
+| $$yl$$ | PowerLaw $$({\alpha=1})$$ | $$[0.01, 1.0]$$ |
 
-## inference
+These parameters define the support on which the model learns the posterior geometry.
 
-While inferring parameters we sample from the standard normal multivariate distribution and apply the inverse flow to get the true posteriors.
+---
+
+## 27. Final Compact Formula
+
+If one formula has to summarize the whole method, it is this:
+
+$$
+s = E_\psi(\tilde{d}),
+$$
+
+$$
+\mathcal{L}_{\text{total}}
+=
+\frac{1}{B}\sum_{i=1}^B
+\bar{\omega}(t_i)
+\left\|
+v_\phi(x_t^{(i)}, t_i, s^{(i)})
+- (\tilde{\theta}^{(i)} - x_0^{(i)})
+\right\|_2^2
++ \lambda_{\text{aux}}\mathcal{L}_{\text{IMNN}},
+$$
+
+$$
+\frac{dx}{dt} = v_\phi(x,t,s),
+\qquad
+x(0)\sim \mathcal{N}(0,I),
+\qquad
+x(1)\approx \tilde{\theta},
+$$
+
+and, when exact posterior correction is desired,
+
+$$
+p(\theta \mid d)
+\propto
+q(\theta \mid d)
+\times
+\frac{p(d \mid \theta)p(\theta)}{q(\theta \mid d)}.
+$$
+
+That is the mathematics of the implemented IMNN + CNN + flow-matching pipeline in `GWFlows`.
