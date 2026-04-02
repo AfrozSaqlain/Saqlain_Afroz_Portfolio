@@ -497,7 +497,7 @@ $$
 \omega(t) = \lambda_w \max(t(1-t), 10^{-3})^{-\gamma},
 $$
 
-where $$\gamma = \text{loss_weight_exponent}$$ and $$\lambda_w = \text{loss_weight_scale}$$.
+where $$\gamma = \texttt{loss\_weight\_exponent}$$ and $$\lambda_w = \texttt{loss\_weight\_scale}$$.
 
 The weights are normalized within a batch:
 
@@ -797,7 +797,7 @@ $$
 w_{\text{ema}} \leftarrow \rho w_{\text{ema}} + (1-\rho)w,
 $$
 
-where $$\rho = \text{ema_decay}$$.
+where $$\rho = \texttt{ema\_decay}$$.
 
 EMA weights are preferred at sampling time because they reduce optimization noise and usually produce cleaner posterior samples.
 
