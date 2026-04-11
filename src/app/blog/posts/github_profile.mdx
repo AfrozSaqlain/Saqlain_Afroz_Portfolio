@@ -27,39 +27,21 @@ Click **Create repository**, and that's it! The content of this new `README.md` 
 
 Go to the following [link](https://readme-typing-svg.herokuapp.com/demo/) and fill in the boxes as per your requirement. You will get something like this:
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 [![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&width=435&separator=%3C&lines=I'm+an+aspiring+astrophysicist;+skilled+in+GW+astrophysics;+machine+learning;+and+scientific+computing.)](https://git.io/typing-svg)
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 To apply some `CSS` we can instead use the below  code and copy paste it into our `README.md` file.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 <p align="center">
   <a href="https://git.io/typing-svg">
     <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&center=true&vCenter=true&width=435&lines=I'm+an+aspiring+astrophysicist%2C;skilled+in+GW+astrophysics%2C+;machine+learning%2C+;and+scientific+computing." alt="Typing SVG" />
   </a>
 </p>
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 ## Add Dynamic GitHub Stats Cards
 
@@ -68,19 +50,10 @@ Static text is great, but let's add some life to your profile with cards that au
 ## GitHub streak
 Copy-paste the markdown below into your GitHub profile `README.md` and replace `YOUR_USERNAME` with your GitHub username.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 [![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=YOUR_USERNAME)](https://git.io/streak-stats)
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 ### Adding the Stats, Language and Streak Cards
 
@@ -89,13 +62,8 @@ You can add two main types of cards: one for your overall stats (stars, commits,
 To make them appear side-by-side, we can use a simple HTML `<table>`. Add the following code to your `README.md` file, making sure to replace `YOUR_USERNAME` with your actual GitHub username.
 
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 <h2 align="center">My GitHub Stats 🚀</h2>
 
 <table align="center" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse; border: none;">
@@ -119,11 +87,7 @@ To make them appear side-by-side, we can use a simple HTML `<table>`. Add the fo
     </td>
   </tr>
 </table>
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 
 ### Customizing the Cards
@@ -138,19 +102,10 @@ This tool is highly customizable. You can change themes, hide specific stats, an
 
 Again copy-paste the markdown below into your GitHub profile `README.md` and replace `YOUR_USERNAME` with your GitHub username.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 ![](https://komarev.com/ghpvc/?username=YOUR_USERNAME)
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 ## Generate an Animated Contribution Snake 🐍
 
@@ -161,13 +116,8 @@ A GitHub Action is a script that runs automatically based on certain triggers. I
 
 Important: Remember to replace `YOUR_USERNAME` with your actual username.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```yaml
 # Name of the workflow
 name: Generate Snake Animation
 
@@ -200,29 +150,16 @@ jobs:
           build_dir: dist
         env:
           GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
-`, 
-    language: "yaml",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 The `permissions: contents: write` line is critical — it gives the action permission to write the generated file back to your repository. Commit the `snake.yml` file.Go to the Actions tab of your repository. On the left, click "Generate Snake Animation" and then click the Run workflow button. After a minute or two, the action will complete. Now, you can add the snake to your `README.md` file with this line of code: 
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 ### 🐍 My Contribution Graph
 
 ![github snake animation](https://github.com/YOUR_USERNAME/YOUR_USERNAME/blob/output/github-snake-dark.svg)
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```
 
 <Media
   src="/images/gallery/github-snake-dark.svg"
@@ -233,13 +170,8 @@ The `permissions: contents: write` line is critical — it gives the action perm
 
 Putting It All Together, here is a complete README.md example combining all the elements.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`
+
+```tsx
 ## Hi there 👋
 
 I'm Saqlain Afroz, an aspiring astrophysicist, skilled in gravitational wave astrophysics, machine learning, and scientific computing.
@@ -283,8 +215,4 @@ I'm Saqlain Afroz, an aspiring astrophysicist, skilled in gravitational wave ast
   aspectRatio="2.35/1"
   radius="l"
 />
-`, 
-    language: "tsx",
-    label: "<github-username>/README.md"
-  }
-]} />
+```

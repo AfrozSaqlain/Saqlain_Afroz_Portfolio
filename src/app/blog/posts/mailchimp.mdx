@@ -13,32 +13,23 @@ Sign up for a [Mailchimp account](https://mailchimp.com) and create a new list i
 
 Create a new [embed form](https://mailchimp.com/help/add-a-signup-form-to-your-website/) and copy the form URL to your Magic Portfolio config.
 
-<CodeBlock
-    highlight="2"
-    codes={[
-  {
-    code:
-`const mailchimp = {
+
+```tsx
+const mailchimp = {
     action: 'https://url/subscribe/post?parameters',
     effects: {
       ...
     }
-};`, 
-    language: "tsx",
-    label: "src/app/resources/config.js"
-  }
-]} />
+};
+```
 
 ## Newsletter content
 
 You can modify the headline and description in the `content.js` file.
 
-<CodeBlock
-    highlight="2"
-    codes={[
-  {
-    code:
-`const newsletter = {
+
+```tsx
+const newsletter = {
     display: true,
     title: <>Subscribe to {person.firstName}'s Newsletter</>,
     description: (
@@ -46,23 +37,16 @@ You can modify the headline and description in the `content.js` file.
         I occasionally write about design, technology, and share thoughts on the intersection of creativity and engineering.
       </>
     ),
-};`, 
-    language: "tsx",
-    label: "src/app/resources/content.js"
-  }
-]} />
+};
+```
 
 ## Background effect
 
 There's a pre-configured background in `Mailchimp.tsx` that you can modify in the `mailchimp` object. Set graphic elements such as gradient, dots, lines, and grid and configure their appearance for the newsletter block.
 
-<CodeBlock
-    codeHeight={24}
-    marginBottom="16"
-    codes={[
-  {
-    code:
-`const mailchimp = {
+
+```tsx
+const mailchimp = {
     action: 'https://url/subscribe/post?parameters',
     effects: {
       mask: {
@@ -101,8 +85,5 @@ There's a pre-configured background in `Mailchimp.tsx` that you can modify in th
         height: 'var(--static-space-32)'
       }
   }
-}`, 
-    language: "tsx",
-    label: "src/app/resources/config.js"
-  }
-]} />
+}
+```
