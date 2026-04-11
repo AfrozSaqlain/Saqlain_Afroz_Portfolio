@@ -1,0 +1,313 @@
+---
+title: "Guide to Docker"
+summary: "A practical introduction to Docker covering images, containers, volumes, cleanup, and an everyday workflow."
+publishedAt: "2026-04-11"
+tag: "Computing"
+---
+
+## About
+
+Docker is a containerization platform that lets you package an application together with its runtime, dependencies, and configuration. Instead of installing everything directly on your machine, you run the application inside an isolated container.
+
+For day-to-day development, the main benefit is reproducibility: the same container image can run on your laptop, on a server, or in CI with much less environment drift.
+
+## Mental model
+
+It helps to keep three ideas separate:
+
+| Term | Meaning |
+| --- | --- |
+| Image | A read-only template containing your app, dependencies, and setup |
+| Container | A running instance created from an image |
+| Volume or bind mount | Storage attached to a container so data survives beyond a single run |
+
+An image is like a blueprint. A container is the actual process created from that blueprint.
+
+## Check that Docker is installed
+
+If Docker is installed correctly, the following commands should work:
+
+```bash
+docker --version
+docker compose version
+```
+
+To verify that the daemon is running, you can also try:
+
+```bash
+docker info
+docker run hello-world
+```
+
+The `hello-world` image is a simple sanity check that Docker can pull an image and start a container successfully.
+
+## Manage the Docker service
+
+On Linux systems using `systemd`, Docker is usually managed through `systemctl`.
+
+Start Docker:
+
+```bash
+sudo systemctl start docker
+```
+
+Stop Docker:
+
+```bash
+sudo systemctl stop docker
+```
+
+Enable Docker on boot:
+
+```bash
+sudo systemctl enable docker
+```
+
+Disable Docker on boot:
+
+```bash
+sudo systemctl disable docker
+```
+
+Check service status:
+
+```bash
+systemctl status docker
+```
+
+## Work with images
+
+List downloaded images:
+
+```bash
+docker image ls
+```
+
+Pull an image from Docker Hub:
+
+```bash
+docker pull ubuntu
+```
+
+Remove an image:
+
+```bash
+docker rmi <image_id>
+```
+
+If an image is in use by an existing container, Docker will refuse to delete it until the dependent container is removed.
+
+## Work with containers
+
+List running containers:
+
+```bash
+docker ps
+```
+
+List all containers, including stopped ones:
+
+```bash
+docker ps -a
+```
+
+Run an interactive Ubuntu shell:
+
+```bash
+docker run -it ubuntu bash
+```
+
+Run a container and delete it automatically when it exits:
+
+```bash
+docker run --rm hello-world
+```
+
+Start an existing stopped container and attach to it:
+
+```bash
+docker start -i <container_id>
+```
+
+View container logs:
+
+```bash
+docker logs <container_id>
+```
+
+Inspect low-level details about a container:
+
+```bash
+docker inspect <container_id>
+```
+
+Stop a running container:
+
+```bash
+docker stop <container_id>
+```
+
+Remove a container:
+
+```bash
+docker rm <container_id>
+```
+
+## Persist data correctly
+
+Containers are ephemeral by default. If you write files inside a container and then delete that container, those files are gone unless you attached persistent storage.
+
+One common approach is a bind mount:
+
+```bash
+docker run -it -v ~/mydata:/home/ubuntu ubuntu bash
+```
+
+In this example:
+
+- `~/mydata` is a directory on the host machine
+- `/home/ubuntu` is the directory inside the container
+
+Any files written to `/home/ubuntu` will appear in `~/mydata` on the host.
+
+For longer-lived setups, named volumes are often cleaner:
+
+```bash
+docker volume create mydata
+docker run -it -v mydata:/data ubuntu bash
+```
+
+Use bind mounts when you want to edit source code from your host machine. Use named volumes when you want Docker-managed persistent storage.
+
+## Build your own image
+
+If you have a `Dockerfile` in the current directory, build an image with:
+
+```bash
+docker build -t my-app .
+```
+
+Then run it with:
+
+```bash
+docker run -p 3000:3000 my-app
+```
+
+This maps port `3000` on your machine to port `3000` inside the container.
+
+## Use Docker Compose
+
+When an application needs more than one service, such as an app server plus a database, Docker Compose is usually the simplest way to manage them together.
+
+Start services defined in `docker-compose.yml` or `compose.yml`:
+
+```bash
+docker compose up
+```
+
+Start in detached mode:
+
+```bash
+docker compose up -d
+```
+
+Stop services:
+
+```bash
+docker compose down
+```
+
+Rebuild images while starting:
+
+```bash
+docker compose up --build
+```
+
+## Clean up unused resources
+
+Remove stopped containers:
+
+```bash
+docker container prune
+```
+
+Remove unused images:
+
+```bash
+docker image prune
+```
+
+Remove unused volumes:
+
+```bash
+docker volume prune
+```
+
+Remove everything unused:
+
+```bash
+docker system prune
+```
+
+If you also want unused images not referenced by tags, include `-a`:
+
+```bash
+docker system prune -a
+```
+
+Be careful with cleanup commands. They are useful, but they can delete data you still intended to keep.
+
+## A simple workflow
+
+A typical beginner workflow looks like this:
+
+```bash
+# Pull an image
+docker pull ubuntu
+
+# Start a shell inside a new container
+docker run -it ubuntu bash
+
+# Leave the container
+exit
+
+# Find the container you just used
+docker ps -a
+
+# Start it again
+docker start -i <container_id>
+```
+
+For app development, the workflow is usually:
+
+```bash
+# Build your image from a Dockerfile
+docker build -t my-app .
+
+# Run the app
+docker run -p 3000:3000 my-app
+```
+
+And for multi-service setups:
+
+```bash
+docker compose up -d
+docker compose logs
+docker compose down
+```
+
+## Run Docker without sudo
+
+On many Linux systems, Docker commands require `sudo`. To allow your user to run Docker directly:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+After that, log out and log back in so the group change takes effect.
+
+## Final notes
+
+The biggest conceptual mistake beginners make is treating containers like full virtual machines. Containers are better thought of as disposable, isolated processes. Build images intentionally, keep containers replaceable, and persist only the data that actually needs to survive.
+
+Once that model is clear, Docker becomes much easier to use in a disciplined way.
