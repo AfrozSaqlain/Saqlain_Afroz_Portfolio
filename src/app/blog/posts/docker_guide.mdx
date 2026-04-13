@@ -306,6 +306,77 @@ sudo usermod -aG docker $USER
 
 After that, log out and log back in so the group change takes effect.
 
+## Dockerizing a Python CLI Application
+
+**Project Structure**
+
+``` bash
+project-root/
+├── pyproject.toml
+├── Dockerfile
+└── src/
+    └── my_package/
+        ├── __init__.py
+        └── cli.py
+```
+
+**Key Points**
+
+-   Use `src/` layout
+-   Define CLI entry point in `pyproject.toml`
+-   Add dependencies
+-   Avoid GUI (use headless mode)
+
+**Dockerfile**
+
+``` dockerfile
+FROM python:3.11-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/app
+
+COPY pyproject.toml .
+COPY src/ ./src/
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+CMD ["bash", "-lc", "cd ~ && exec bash"]
+```
+
+**Build**
+
+``` bash
+docker build -t my-cli-app .
+```
+
+**Run**
+
+``` bash
+docker run -it --rm my-cli-app
+```
+
+**Tag**
+
+``` bash
+docker tag my-cli-app <your-username>/my-cli-app:latest
+```
+
+**Push**
+
+``` bash
+docker push <your-username>/my-cli-app:latest
+```
+
 ## Final notes
 
 The biggest conceptual mistake beginners make is treating containers like full virtual machines. Containers are better thought of as disposable, isolated processes. Build images intentionally, keep containers replaceable, and persist only the data that actually needs to survive.
