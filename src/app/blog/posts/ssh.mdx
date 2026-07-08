@@ -1,0 +1,338 @@
+````mdx
+---
+title: "Setting up Passwordless SSH on Arch Linux"
+summary: "Learn how to securely connect to your Arch Linux machine using SSH keys instead of passwords."
+publishedAt: "2026-07-08"
+---
+
+SSH is one of the most commonly used tools for remotely accessing Linux systems. While logging in with a password works, the recommended approach is to authenticate using **SSH keys**. Key-based authentication is more secure, more convenient, and forms the foundation for many development workflows.
+
+This guide walks through setting up passwordless SSH authentication on an Arch Linux machine from scratch.
+
+## Prerequisites
+
+Before starting, ensure you have:
+
+- An Arch Linux machine that you want to connect **to** (the server).
+- Another computer that you want to connect **from** (the client).
+- Both machines connected to the same network for the initial setup.
+
+---
+
+## Step 1: Install OpenSSH
+
+Install the OpenSSH package on your Arch Linux machine.
+
+```bash
+sudo pacman -S openssh
+```
+
+Enable and start the SSH daemon.
+
+```bash
+sudo systemctl enable --now sshd
+```
+
+Verify that the service is running.
+
+```bash
+systemctl status sshd
+```
+
+If everything is configured correctly, the output should indicate:
+
+```text
+Active: active (running)
+```
+
+---
+
+## Step 2: Find the IP Address
+
+To connect to your machine, you'll first need its local IP address.
+
+Run
+
+```bash
+hostname -I
+```
+
+or
+
+```bash
+ip addr
+```
+
+Example output:
+
+```text
+192.168.1.150
+```
+
+You'll use this IP address when connecting over SSH.
+
+---
+
+## Step 3: Verify SSH is Listening
+
+Confirm that the SSH server is listening for incoming connections.
+
+```bash
+ss -tln | grep :22
+```
+
+Expected output:
+
+```text
+LISTEN 0 128 0.0.0.0:22
+```
+
+This confirms that the SSH daemon is accepting connections on port **22**.
+
+---
+
+## Step 4: Generate an SSH Key Pair
+
+On the **client computer**, check whether you already have an SSH key.
+
+```bash
+ls ~/.ssh
+```
+
+If you already see
+
+```text
+id_ed25519
+id_ed25519.pub
+```
+
+you can skip to the next section.
+
+Otherwise, generate a new key pair.
+
+```bash
+ssh-keygen -t ed25519 -a 100 -C "my laptop"
+```
+
+When prompted for the file location, simply press **Enter** to accept the default.
+
+You'll then be asked for a passphrase.
+
+You can either:
+
+- Leave it empty for maximum convenience.
+- Choose a secure passphrase for additional protection.
+
+After completion, you'll have
+
+```text
+~/.ssh/id_ed25519
+~/.ssh/id_ed25519.pub
+```
+
+---
+
+## Step 5: Copy the Public Key
+
+The easiest method is using `ssh-copy-id`.
+
+```bash
+ssh-copy-id username@192.168.1.150
+```
+
+Example:
+
+```bash
+ssh-copy-id saqlain@192.168.1.150
+```
+
+You'll be asked for your password **one last time**.
+
+Once completed, your public key is automatically installed.
+
+### Manual Method
+
+Display your public key.
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+Copy the entire output.
+
+Log into the remote machine.
+
+```bash
+ssh username@192.168.1.150
+```
+
+Create the SSH directory if necessary.
+
+```bash
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+```
+
+Open the authorized keys file.
+
+```bash
+nano ~/.ssh/authorized_keys
+```
+
+Paste the copied public key, save the file, and set the correct permissions.
+
+```bash
+chmod 600 ~/.ssh/authorized_keys
+```
+
+Logout.
+
+```bash
+exit
+```
+
+---
+
+## Step 6: Test the Connection
+
+Now try logging in again.
+
+```bash
+ssh username@192.168.1.150
+```
+
+If everything is configured correctly, SSH should log you in without asking for your account password.
+
+If you protected your SSH key with a passphrase, you'll be prompted for that instead.
+
+---
+
+## Step 7: Disable Password Authentication
+
+> **Important:** Only perform this step after confirming that key-based authentication works.
+
+Open the SSH configuration.
+
+```bash
+sudo nano /etc/ssh/sshd_config
+```
+
+Ensure the following options are set.
+
+```text
+PubkeyAuthentication yes
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+PermitRootLogin no
+```
+
+Restart the SSH service.
+
+```bash
+sudo systemctl restart sshd
+```
+
+Your machine will now only accept SSH key authentication.
+
+---
+
+## Step 8: Simplify Connections with SSH Config
+
+Typing the full username and IP address every time quickly becomes tedious.
+
+Create an SSH configuration file.
+
+```bash
+nano ~/.ssh/config
+```
+
+Example configuration:
+
+```text
+Host arch
+    HostName 192.168.1.150
+    User saqlain
+    IdentityFile ~/.ssh/id_ed25519
+```
+
+Set the correct permissions.
+
+```bash
+chmod 600 ~/.ssh/config
+```
+
+You can now connect simply by running
+
+```bash
+ssh arch
+```
+
+---
+
+## Step 9: Use an SSH Agent (Optional)
+
+If you chose a passphrase, you can avoid entering it every time by using an SSH agent.
+
+Start the agent.
+
+```bash
+eval "$(ssh-agent -s)"
+```
+
+Add your key.
+
+```bash
+ssh-add ~/.ssh/id_ed25519
+```
+
+You'll only need to enter the passphrase once per session.
+
+---
+
+## Connecting Over the Internet
+
+The local IP address (`192.168.x.x`) only works when both machines are on the same network.
+
+To connect from anywhere in the world, you'll also need one of the following:
+
+- Tailscale (recommended)
+- Router port forwarding
+- A reverse SSH tunnel through a VPS
+
+SSH keys provide authentication, but they do **not** make your computer reachable over the internet.
+
+---
+
+## Final Directory Structure
+
+On the client:
+
+```text
+~/.ssh/
+├── config
+├── id_ed25519
+├── id_ed25519.pub
+└── known_hosts
+```
+
+On the Arch Linux server:
+
+```text
+~/.ssh/
+└── authorized_keys
+```
+
+Once everything is configured, connecting is as simple as:
+
+```bash
+ssh arch
+```
+
+or, without an SSH config:
+
+```bash
+ssh username@192.168.1.150
+```
+
+Passwordless SSH is one of those small improvements that quickly becomes indispensable. It not only streamlines remote access but also improves security by eliminating password-based logins entirely.
+````
