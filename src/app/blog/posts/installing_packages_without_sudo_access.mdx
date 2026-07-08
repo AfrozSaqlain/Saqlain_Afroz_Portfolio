@@ -1,0 +1,98 @@
+---
+
+title: "Installing Starship Without sudo on Shared Servers"
+summary: "Learn how to install the Starship shell prompt on shared Linux servers and HPC clusters where you don't have sudo privileges."
+publishedAt: "2026-07-08"
+tag: "Linux"
+------------
+
+## The problem
+
+When installing Starship on a shared Linux server, university cluster, or HPC system, you may encounter an error similar to the following:
+
+```bash
+$ curl -sS https://starship.rs/install.sh | sh
+
+Configuration
+> Bin directory: /usr/local/bin
+> Platform:      unknown-linux-musl
+> Arch:          x86_64
+
+? Install Starship latest to /usr/local/bin? [y/N] y
+! Escalated permissions are required to install to /usr/local/bin
+Sorry, user <username> may not run sudo on <hostname>.
+x Superuser not granted, aborting installation
+```
+
+This happens because the installer attempts to install Starship into `/usr/local/bin`, a system-wide directory that requires administrator (sudo) privileges. On most shared systems, users don't have permission to write to this location.
+
+Fortunately, Starship can be installed entirely within your home directory.
+
+## Create a local binary directory
+
+Create a directory to store your personal executables.
+
+```bash
+mkdir -p ~/.local/bin
+```
+
+## Install Starship locally
+
+Run the installer again, but instruct it to install Starship into your local binary directory instead of `/usr/local/bin`.
+
+```bash
+curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin
+```
+
+Since `~/.local/bin` is owned by your user account, no administrator privileges are required.
+
+## Add Starship to your PATH
+
+Make sure your shell knows where to find the newly installed executable.
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+```
+
+## Initialize Starship
+
+Enable the Starship prompt every time a new Bash session starts.
+
+```bash
+echo 'eval "$(starship init bash)"' >> ~/.bashrc
+```
+
+Reload your shell configuration.
+
+```bash
+source ~/.bashrc
+```
+
+## Verify the installation
+
+Confirm that Starship is installed correctly.
+
+```bash
+starship --version
+```
+
+If everything is configured correctly, you should see the installed version printed to the terminal.
+
+## Complete installation
+
+For convenience, here are all the commands together.
+
+```bash
+mkdir -p ~/.local/bin
+
+curl -sS https://starship.rs/install.sh | sh -s -- --bin-dir ~/.local/bin
+
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
+source ~/.bashrc
+```
+
+## Why this works
+
+The default Starship installer targets `/usr/local/bin`, which requires root access. By specifying `--bin-dir ~/.local/bin`, the binary is installed into a directory owned by your user account. After adding this directory to your `PATH` and initializing Starship in your shell configuration, the prompt works exactly as if it had been installed system-wide—without requiring `sudo`.
