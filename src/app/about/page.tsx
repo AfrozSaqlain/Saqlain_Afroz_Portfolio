@@ -41,6 +41,11 @@ export default function About() {
       items: about.work.experiences.map((experience) => experience.company),
     },
     {
+      title: about.projects.title,
+      display: about.projects.display,
+      items: about.projects.items.map((project) => project.title),
+    },
+    {
       title: about.studies.title,
       display: about.studies.display,
       items: about.studies.institutions.map((institution) => institution.name),
@@ -237,6 +242,93 @@ export default function About() {
                     {experience.images && experience.images.length > 0 && (
                       <Flex fillWidth paddingTop="m" paddingLeft="40" gap="12" wrap>
                         {experience.images.map((image, index) => (
+                          <Flex
+                            key={index}
+                            border="neutral-medium"
+                            radius="m"
+                            //@ts-ignore
+                            minWidth={image.width}
+                            //@ts-ignore
+                            height={image.height}
+                          >
+                            <Media
+                              enlarge
+                              radius="m"
+                              //@ts-ignore
+                              sizes={image.width.toString()}
+                              //@ts-ignore
+                              alt={image.alt}
+                              //@ts-ignore
+                              src={image.src}
+                            />
+                          </Flex>
+                        ))}
+                      </Flex>
+                    )}
+                  </Column>
+                ))}
+              </Column>
+            </>
+          )}
+
+          {about.projects.display && (
+            <>
+              <Heading as="h2" id={about.projects.title} variant="display-strong-s" marginBottom="m">
+                {about.projects.title}
+              </Heading>
+              <Column fillWidth gap="l" marginBottom="40">
+                {about.projects.items.map((project, index) => (
+                  <Column key={`${project.title}-${index}`} fillWidth>
+                    <Flex fillWidth horizontal="space-between" vertical="end" marginBottom="4">
+                      <Text id={project.title} variant="heading-strong-l">
+                        {project.title}
+                      </Text>
+                      {project.timeframe && (
+                        <Text variant="heading-default-xs" onBackground="neutral-weak">
+                          {project.timeframe}
+                        </Text>
+                      )}
+                    </Flex>
+                    {project.techStack && (
+                      <Text variant="body-default-s" onBackground="brand-weak" marginBottom="m">
+                        {project.techStack}
+                      </Text>
+                    )}
+                    {project.description && (
+                      <Text variant="body-default-m" marginBottom="m">
+                        {project.description}
+                      </Text>
+                    )}
+                    {project.achievements && project.achievements.length > 0 && (
+                      <Column as="ul" gap="16" marginBottom="m">
+                        {project.achievements.map((achievement: React.ReactNode, index: number) => (
+                          <Text
+                            as="li"
+                            variant="body-default-m"
+                            key={`${project.title}-${index}`}
+                          >
+                            {achievement}
+                          </Text>
+                        ))}
+                      </Column>
+                    )}
+                    {project.github && (
+                      <Flex paddingTop="8">
+                        <Button
+                          href={project.github}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          variant="secondary"
+                          size="s"
+                          prefixIcon="github"
+                        >
+                          View on GitHub
+                        </Button>
+                      </Flex>
+                    )}
+                    {project.images && project.images.length > 0 && (
+                      <Flex fillWidth paddingTop="m" paddingLeft="40" gap="12" wrap>
+                        {project.images.map((image, index) => (
                           <Flex
                             key={index}
                             border="neutral-medium"

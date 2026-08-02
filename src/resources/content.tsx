@@ -1,5 +1,6 @@
 import { About, Blog, CV, Gallery, Home, Newsletter, Notes, Person, Social, Work } from "@/types";
 import { Logo } from "@once-ui-system/core";
+import { Math } from "@/components/Math";
 
 const person: Person = {
   firstName: "Saqlain",
@@ -142,6 +143,78 @@ const about: About = {
             Contributing to a multi-institutional research effort aimed at evaluating the capabilities of PINNs in addressing complex differential equations
           </>,
         ],
+        images: [],
+      },
+    ],
+  },
+  projects: {
+    display: true, // set to false to hide this section
+    title: "Projects",
+    items: [
+      {
+        title: "Papr — Terminal Workspace for Academic Research",
+        techStack: "Rust, Ratatui, Tokio, Reqwest, SQLite, Poppler, LaTeX",
+        timeframe: "2025 - Present",
+        description: (
+          <>
+            A fast, keyboard-first terminal workspace built for academic research. Papr brings together arXiv paper discovery, local PDF library management, in-terminal reading, Markdown note-taking, and LaTeX manuscript editing into a unified, distraction-free terminal interface.
+          </>
+        ),
+        achievements: [
+          <>
+            <strong>Paper Discovery & Smart Library Sync:</strong> Integrated arXiv search with instant filtering and page history; background paper downloads auto-saved with human-readable titles; and a WAL-enabled SQLite local storage layer that deduplicates entries without losing annotations or reading progress.
+          </>,
+          <>
+            <strong>In-Terminal PDF Viewing & Note-Taking:</strong> High-performance in-terminal rendering using Kitty and Sixel graphics protocols, sortable reading queue, disk-workspace folder mirroring, and a built-in Vim-inspired Markdown note-taking editor.
+          </>,
+          <>
+            <strong>LaTeX Workspace & Error Diagnostics:</strong> Built-in LaTeX manuscript editor featuring asynchronous background compilation via <code>latexmk</code>, real-time side-by-side PDF preview, and clean error grouping with exact source line locations and diagnostic hints.
+          </>,
+          <>
+            <strong>Extensible Plugin Architecture:</strong> Process-isolated, versioned JSON plugin architecture running in isolated processes with bounded execution limits (includes an opt-in auto-tagging plugin).
+          </>,
+        ],
+        github: "https://github.com/AfrozSaqlain/Papr",
+        images: [],
+      },
+      {
+        title: "Flow Models — Continuous Normalizing Flows & Flow Matching",
+        techStack: "Python, PyTorch, Flow Matching, Continuous Normalizing Flows, SciPy",
+        timeframe: "2024 - Present",
+        description: (
+          <>
+            Implementation of Continuous Normalizing Flows (CNF) and Flow Matching (FM) frameworks for generative modeling and sampling from complex distributions using ODE integration.
+          </>
+        ),
+        achievements: [
+          <>
+            <strong>Optimal Transport Velocity Regression:</strong> Implemented linear probability paths <Math math="x_t = (1-t)x_0 + t x_1" /> to train neural vector fields <Math math="v_\theta(x_t, t)" /> via direct velocity MSE loss.
+          </>,
+          <>
+            <strong>Robust Architecture & ODE Inference:</strong> Designed MLP models with sinusoidal time embeddings and residual connections to prevent velocity explosion and ensure smooth ODE flow integration.
+          </>,
+        ],
+        github: "https://github.com/AfrozSaqlain/Flow-Models",
+        images: [],
+      },
+      {
+        title: "GWSurrogate — Reduced-Order Modeling for Gravitational Waveforms",
+        techStack: "Python, NumPy, SciPy, PyCBC, SVD, Reduced Order Modeling",
+        timeframe: "2024 - Present",
+        description: (
+          <>
+            Surrogate modeling framework for rapid evaluation of gravitational waveforms using reduced-order modeling (ROM) and sparse grid interpolation techniques in the frequency domain.
+          </>
+        ),
+        achievements: [
+          <>
+            <strong>Reduced Basis Construction:</strong> Applied Singular Value Decomposition (SVD) on frequency-domain waveform catalogs to construct orthonormal reduced bases for amplitude and phase.
+          </>,
+          <>
+            <strong>Sparse Interpolation & Fast Reconstruction:</strong> Built coefficient interpolation over sparse parameter grids, enabling orders-of-magnitude acceleration over full numerical waveform solvers.
+          </>,
+        ],
+        github: "https://github.com/AfrozSaqlain/EccGWSurrogate",
         images: [],
       },
     ],

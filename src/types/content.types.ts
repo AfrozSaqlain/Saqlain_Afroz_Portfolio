@@ -167,6 +167,41 @@ export interface About extends BasePageConfig {
       }>;
     }>;
   };
+  /** Projects section */
+  projects: {
+    /** Whether to display projects section */
+    display: boolean;
+    /** Title for the projects section */
+    title: string;
+    /** List of projects / packages */
+    items: Array<{
+      /** Project title */
+      title: string;
+      /** Tech stack or subtitle */
+      techStack?: string;
+      /** Timeframe */
+      timeframe?: string;
+      /** Description */
+      description: React.ReactNode;
+      /** Key achievements or feature highlights */
+      achievements?: React.ReactNode[];
+      /** GitHub link */
+      github?: string;
+      /** Project link */
+      link?: string;
+      /** Images related to the project */
+      images?: Array<{
+        /** Image source path */
+        src: string;
+        /** Image alt text */
+        alt: string;
+        /** Image width ratio */
+        width: number;
+        /** Image height ratio */
+        height: number;
+      }>;
+    }>;
+  };
   /** Studies/education section */
   studies: {
     /** Whether to display studies section */
