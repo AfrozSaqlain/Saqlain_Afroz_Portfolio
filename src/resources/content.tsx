@@ -154,7 +154,6 @@ const about: About = {
       {
         title: "Papr — Terminal Workspace for Academic Research",
         techStack: "Rust, Ratatui, Tokio, Reqwest, SQLite, Poppler, LaTeX",
-        timeframe: "2025 - Present",
         description: (
           <>
             A fast, keyboard-first terminal workspace built for academic research. Papr brings together arXiv paper discovery, local PDF library management, in-terminal reading, Markdown note-taking, and LaTeX manuscript editing into a unified, distraction-free terminal interface.
@@ -180,7 +179,6 @@ const about: About = {
       {
         title: "Flow Models — Continuous Normalizing Flows & Flow Matching",
         techStack: "Python, PyTorch, Flow Matching, Continuous Normalizing Flows, SciPy",
-        timeframe: "2024 - Present",
         description: (
           <>
             Implementation of Continuous Normalizing Flows (CNF) and Flow Matching (FM) frameworks for generative modeling and sampling from complex distributions using ODE integration.
@@ -200,7 +198,6 @@ const about: About = {
       {
         title: "GWSurrogate — Reduced-Order Modeling for Gravitational Waveforms",
         techStack: "Python, NumPy, SciPy, PyCBC, SVD, Reduced Order Modeling",
-        timeframe: "2024 - Present",
         description: (
           <>
             Surrogate modeling framework for rapid evaluation of gravitational waveforms using reduced-order modeling (ROM) and sparse grid interpolation techniques in the frequency domain.
