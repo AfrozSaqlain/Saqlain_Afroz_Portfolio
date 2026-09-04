@@ -168,14 +168,14 @@ export const Mailchimp = ({ newsletter }: { newsletter: NewsletterProps }) => {
             <input
               type="text"
               readOnly
-              name="b_c1a5a210340eb6c7bff33b2ba_0462d244aa"
+              name="b_d1007187c70dbfffd8a933e94_6bf86d9ceb"
               tabIndex={-1}
               value=""
             />
           </div>
           <div className="clear">
             <Flex height="48" vertical="center">
-              <Button id="mc-embedded-subscribe" value="Subscribe" size="m" fillWidth>
+              <Button id="mc-embedded-subscribe" type="submit" value="Subscribe" size="m" fillWidth>
                 Subscribe
               </Button>
             </Flex>

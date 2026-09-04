@@ -144,7 +144,7 @@ const effects: EffectsConfig = {
 };
 
 const mailchimp: MailchimpConfig = {
-  action: "https://url/subscribe/post?parameters",
+  action: "https://app.us20.list-manage.com/subscribe/post?u=d1007187c70dbfffd8a933e94&id=6bf86d9ceb&f_id=002778f1f0",
   effects: {
     mask: {
       cursor: true,

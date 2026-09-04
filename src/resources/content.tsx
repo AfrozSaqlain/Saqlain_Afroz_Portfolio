@@ -221,6 +221,10 @@ const about: About = {
     title: "Studies",
     institutions: [
       {
+        name: "Institut de Física d'Altes Energies",
+        description: <>PhD in Gravitational Wave Astrophysics.</>,
+      },
+      {
         name: "Indian Institute of Science Education and Research Kolkata",
         description: <>BSMS in Physics.</>,
       },
