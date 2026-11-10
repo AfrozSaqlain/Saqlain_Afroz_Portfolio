@@ -9,7 +9,7 @@ const person: Person = {
   role: "Inspiring Astrophysicist",
   avatar: "/images/avatar.jpg",
   email: "sa20ms230@iiserkol.ac.in",
-  location: "Asia/Kolkata", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
+  location: "Europe/Madrid", // Expecting the IANA time zone identifier, e.g., 'Europe/Vienna'
   languages: ["English", "Hindi"], // optional: Leave the array empty if you don't want to display languages
   cv_path: "/cv",
   cv_pic_path: "/images/CV_Pic.jpg"
@@ -101,7 +101,7 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        I am a BS-MS Physics graduate from IISER Kolkata, worked at the intersection of gravitational wave physics, machine learning, and quantum computing. My research focuses on fast parameter estimation, signal classification, and quantum simulations of black holes. Interested in general relativity, gravitational wave astrophysics, machine learning, quantum computation, and multi-messenger astronomy. Seeking a doctoral position at a reputable research organization to further pursue these interests and contribute to cutting-edge developments in fundamental physics.
+        PhD student at IFAE Barcelona, working on gravitational wave physics and machine learning. My research focuses on fast parameter estimation, signal classification, waveform modelling, detector characterization. Interested in general relativity, gravitational wave astrophysics, machine learning, quantum computation, and multi-messenger astronomy.
       </>
     ),
   },
