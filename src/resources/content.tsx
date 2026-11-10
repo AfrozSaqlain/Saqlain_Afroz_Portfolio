@@ -40,6 +40,11 @@ const social: Social = [
     link: "https://www.linkedin.com/in/saqlain-afroz-7a47961b8/",
   },
   {
+    name: "Orcid",
+    icon: "orcid",
+    link: "https://orcid.org/0009-0009-6010-8682",
+  },
+  {
     name: "Instagram",
     icon: "instagram",
     link: "https://www.instagram.com/afroz_3680/",

@@ -28,7 +28,7 @@ import {
 } from "@once-ui-system/core";
 
 import { Mail, Phone, Globe } from "lucide-react";
-import { SiLinkedin, SiGithub } from "react-icons/si";
+import { SiLinkedin, SiGithub, SiOrcid } from "react-icons/si";
 
 
 import remarkMath from "remark-math";
@@ -207,6 +207,7 @@ const components = {
   Globe,
   SiLinkedin, 
   SiGithub,
+  SiOrcid,
   PythonPlayground,
   JupyterLiteEmbed,
 };
